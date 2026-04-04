@@ -1,20 +1,11 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
-
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+context: |
+  Tech stack: Python 3.12 + FastAPI + SQLAlchemy async + Alembic (backend),
+    React 18 + Vite + TypeScript (frontend), PostgreSQL + Redis, Docker Compose.
+  Canvas editor: HTML/CSS overlay + html2canvas for export (MVP).
+  Server-side rendering via Pillow on backend.
+  Session-based history (no auth MVP).
+  8 bundled .ttf fonts in /fonts volume.
+  Code quality: ruff + mypy + pytest, pre-commit required.
+  See CONSTITUTION.md for project principles.
