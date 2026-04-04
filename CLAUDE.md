@@ -43,3 +43,5 @@ OpenSpec specs live under `openspec/specs/` and changes under `openspec/changes/
 - docker-patterns  
 - api-design
 - deployment-patterns
+- frontend-patterns
+- frontend-design
