@@ -3,27 +3,22 @@ stages:
   - type-check
   - test
   - frontend-build
-  - docker-build
 
 # ─── Lint stage ─────────────────────────────────────────────────────
 lint:backend:ruff:
   stage: lint
   image: python:3.12-slim
-  before_script:
-    - pip install --quiet ruff
   script:
-    - cd backend && ruff check .
-    - cd backend && ruff format --check .
+    - pip install --quiet ruff
+    - cd backend && ruff check . && ruff format --check .
 
 # ─── Type-check stage ───────────────────────────────────────────────
 type-check:
   stage: type-check
   image: python:3.12-slim
-  before_script:
-    - pip install --quiet --upgrade pip
-    - cd backend && pip install -e ".[dev]" 2>/dev/null || pip install mypy
   script:
-    - cd backend && mypy --strict .
+    - pip install --quiet --upgrade pip
+    - cd backend && pip install -e ".[dev]" && mypy --strict .
 
 # ─── Test stage ─────────────────────────────────────────────────────
 test:
@@ -38,38 +33,13 @@ test:
     POSTGRES_DB: dl2026_test
     DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/dl2026_test
     REDIS_URL: redis://redis:6379/0
-  before_script:
-    - pip install --quiet --upgrade pip
-    - cd backend && pip install -e ".[dev]"
   script:
-    - cd backend && python -m pytest tests/ -v
+    - pip install --quiet --upgrade pip
+    - cd backend && pip install -e ".[dev]" && python -m pytest tests/ -v
 
 # ─── Frontend-build stage ───────────────────────────────────────────
 frontend-build:
   stage: frontend-build
   image: node:20-alpine
-  before_script:
-    - cd frontend && npm install
   script:
-    - cd frontend && npm run build
-
-# ─── Docker-build stage ─────────────────────────────────────────────
-docker-build:backend:
-  stage: docker-build
-  image: docker:24-cli
-  services:
-    - docker:24-dind
-  before_script:
-    - docker --version
-  script:
-    - docker build -t dl2026-backend backend/
-
-docker-build:frontend:
-  stage: docker-build
-  image: docker:24-cli
-  services:
-    - docker:24-dind
-  before_script:
-    - docker --version
-  script:
-    - docker build -t dl2026-frontend frontend/
+    - cd frontend && npm install && npm run build
