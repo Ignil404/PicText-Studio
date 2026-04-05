@@ -1,16 +1,13 @@
-import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { HomePage } from './pages/HomePage'
+import { EditorPage } from './pages/EditorPage'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h1>DL2026 FSD2</h1>
-      <p>Frontend application</p>
-      <p>
-        <button onClick={() => setCount((c) => c + 1)}>count is {count}</button>
-      </p>
-    </div>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/editor/:id" element={<EditorPage />} />
+    </Routes>
   )
 }
 

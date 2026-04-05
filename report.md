@@ -16,3 +16,7 @@
 - Завершён скаффолд проекта
 - Docker compose: все 4 сервиса healthy (postgres, redis, backend, frontend)
 - Смёржена ветка feature/project-scaffold → develop
+### Фронтенд
+- Frontend scaffold: Vite + React + TypeScript
+- Компоненты: TemplateGallery, TemplateCard, Editor, TextLayer, Toolbar, ExportButton
+- Экспорт PNG/JPEG через html2canvas

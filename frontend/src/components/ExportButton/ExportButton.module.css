@@ -1,0 +1,38 @@
+.export {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn,
+.btnOutline {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.btnOutline {
+  background: transparent;
+  color: #a3a3a3;
+  border: 1px solid #333;
+}
+
+.btnOutline:hover {
+  color: #fafafa;
+  border-color: #555;
+}

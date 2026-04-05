@@ -1,0 +1,37 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.textBlock {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+  padding: 2px 4px;
+  white-space: pre-wrap;
+  transition: outline 0.1s ease;
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+}
+
+.textBlock:active {
+  cursor: grabbing;
+}
+
+.selected {
+  outline: 2px solid #60a5fa;
+}
+
+.textInput {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  text-align: center;
+  outline: none;
+  min-width: 60px;
+  max-width: 300px;
+}
