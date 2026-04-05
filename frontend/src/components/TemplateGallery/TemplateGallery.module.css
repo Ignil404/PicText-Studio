@@ -1,0 +1,74 @@
+.section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: #a3a3a3;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.filter {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #1f1f1f;
+  color: #a3a3a3;
+  border: 1px solid #2f2f2f;
+  transition: all 0.15s ease;
+}
+
+.filterBtn:hover {
+  color: #fafafa;
+  border-color: #404040;
+}
+
+.filterBtnActive {
+  background: #e5e5e5;
+  color: #0a0a0a;
+  border-color: #e5e5e5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.status {
+  text-align: center;
+  margin-top: 4rem;
+  color: #a3a3a3;
+  font-size: 0.95rem;
+}
+
+.error {
+  color: #f87171;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: #525252;
+  font-size: 0.95rem;
+}
