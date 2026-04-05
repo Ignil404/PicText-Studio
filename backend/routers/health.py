@@ -3,6 +3,7 @@ import os as _os
 
 import redis
 from fastapi import APIRouter, Response
+from sqlalchemy import text
 
 from database import engine
 from logger import get_logger
@@ -25,7 +26,8 @@ async def health() -> Response:
     # Check PostgreSQL connectivity
     try:
         async with engine.begin() as conn:
-            status["postgres"] = "ok"
+            await conn.execute(text("SELECT 1"))
+        status["postgres"] = "ok"
         logger.info("PostgreSQL connection successful")
     except Exception as exc:
         status["postgres"] = f"error: {exc}"

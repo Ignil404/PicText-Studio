@@ -2,6 +2,7 @@
 
 Console-only output for Docker containers.
 """
+
 import logging
 import sys
 from typing import Any
@@ -13,9 +14,7 @@ def configure_logging() -> None:
     """Configure structlog with human-readable console output."""
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(
-        structlog.stdlib.ProcessorFormatter(
-            processor=structlog.dev.ConsoleRenderer()
-        )
+        structlog.stdlib.ProcessorFormatter(processor=structlog.dev.ConsoleRenderer())
     )
 
     logging.basicConfig(level=logging.INFO, handlers=[console_handler])

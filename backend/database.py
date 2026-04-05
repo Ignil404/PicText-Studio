@@ -9,7 +9,9 @@ class Base(DeclarativeBase):
     pass
 
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@postgres:5432/dl2026")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@postgres:5432/dl2026"
+)
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 

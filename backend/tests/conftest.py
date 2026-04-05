@@ -1,6 +1,5 @@
-from collections.abc import AsyncGenerator
-from typing import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -32,9 +31,17 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture
 def mock_db() -> Generator[MagicMock, None, None]:
-    """Mock the database engine for tests that need DB unavailable simulation."""
+    """Mock the database engine to simulate DB unavailability."""
     mock_engine = MagicMock()
-    mock_engine.raw_connection = AsyncMock(side_effect=Exception("connection refused"))
+
+    class FailingCtx:
+        async def __aenter__(self) -> None:
+            raise Exception("connection refused")
+
+        async def __aexit__(self, *args: object) -> None:
+            pass
+
+    mock_engine.begin.return_value = FailingCtx()
     with patch("routers.health.engine", mock_engine):
         yield mock_engine
 
@@ -43,8 +50,6 @@ def mock_db() -> Generator[MagicMock, None, None]:
 def mock_redis_down() -> Generator[MagicMock, None, None]:
     """Mock Redis to simulate it being unavailable."""
     mock_redis = MagicMock()
-    mock_redis.from_url.return_value.ping.side_effect = ConnectionError(
-        "Connection refused"
-    )
+    mock_redis.from_url.return_value.ping.side_effect = ConnectionError("Connection refused")
     with patch("routers.health.redis", mock_redis):
         yield mock_redis

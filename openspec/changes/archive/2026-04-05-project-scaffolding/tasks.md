@@ -47,7 +47,7 @@
 
 ## 8. Smoke test
 
-- [ ] 8.1 Verify `docker compose up` starts all 4 services with green health checks
-- [ ] 8.2 Verify `curl /api/health` returns 200 OK
-- [ ] 8.3 Verify `ruff check`, `mypy`, and `pytest` all pass on the backend
-- [ ] 8.4 Verify frontend `npm run build` produces valid output in `dist/`
+- [x] 8.1 Verify `docker compose up` starts all 4 services with green health checks
+- [x] 8.2 Verify `curl /api/health` returns 200 OK
+- [x] 8.3 Verify `ruff check`, `mypy`, and `pytest` all pass on the backend
+- [x] 8.4 Verify frontend `npm run build` produces valid output in `dist/`
