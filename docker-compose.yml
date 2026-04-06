@@ -38,6 +38,8 @@ services:
       REDIS_URL: redis://redis:6379/0
     volumes:
       - ./backend:/app
+      - rendered_images:/app/rendered_images
+      - ./fonts:/fonts:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,3 +60,4 @@ services:
 
 volumes:
   pgdata:
+  rendered_images:

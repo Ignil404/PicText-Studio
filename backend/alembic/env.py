@@ -1,26 +1,21 @@
+
 import os
-from logging.config import fileConfig
 
 from sqlalchemy import pool
+from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 from database import Base  # noqa: F401
+from models import RenderHistory, Template  # noqa: F401
 
-# mypy: disable-error-code="arg-type,no-untyped-def,no-untyped-call"
-
+# `config` is injected by alembic at runtime via env.py invocation context
 config = context.config
 
-# Override sqlalchemy.url with environment variable if set
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
-
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# For autogenerate support, import all models here
-# from backend.models import Base  # noqa: F401
+# Override alembic.ini URL with DATABASE_URL from environment (Docker-safe)
+DB_URL = os.getenv("DATABASE_URL")
+if DB_URL:
+    config.set_main_option("sqlalchemy.url", DB_URL)
 
 
 def run_migrations_offline() -> None:
@@ -36,7 +31,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection) -> None:
+def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=Base.metadata)
     with context.begin_transaction():
         context.run_migrations()
