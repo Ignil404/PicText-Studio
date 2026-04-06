@@ -1,4 +1,4 @@
-.PHONY: dev up down build clean test lint backend-install frontend-install
+.PHONY: dev up down build clean test lint backend-install frontend-install download-fonts
 
 dev:
 	docker compose up
@@ -46,3 +46,7 @@ test-local:
 lint-local:
 	cd backend && uv run ruff check .
 	cd backend && uv run mypy .
+
+# Seed the database with initial templates
+seed:
+	cd backend && uv run python seeds/seed_templates.py

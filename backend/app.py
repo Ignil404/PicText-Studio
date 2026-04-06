@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from logger import configure_logging, get_logger
 
@@ -19,6 +22,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    rendered_dir = os.path.join(os.path.dirname(__file__), "rendered_images")
+    os.makedirs(rendered_dir, exist_ok=True)
+    app.mount("/api/rendered", StaticFiles(directory=rendered_dir), name="rendered")
 
     logger.info("Middleware configured")
     return app

@@ -1,0 +1,44 @@
+from __future__ import annotations
+
+import uuid
+from datetime import UTC, datetime
+
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Template(Base):
+    __tablename__ = "templates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False)
+    image_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    text_zones: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+
+class RenderHistory(Base):
+    __tablename__ = "render_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    template_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("templates.id"), nullable=False
+    )
+    text_blocks: Mapped[list[dict[str, object]]] = mapped_column(JSONB, nullable=False)
+    image_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (Index("ix_render_history_session_id", "session_id"),)
