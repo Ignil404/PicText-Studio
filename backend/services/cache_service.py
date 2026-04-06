@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import uuid
+from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class _UUIDEncoder(json.JSONEncoder):
-    def default(self, obj: object) -> str:
+    def default(self, obj: object) -> Any:
         if isinstance(obj, uuid.UUID):
             return str(obj)
         return super().default(obj)
@@ -29,7 +30,7 @@ class CacheService:
         if self._client is None:
             try:
                 self._client = aioredis.from_url(self._url)
-                await self._client.ping()
+                await self._client.ping()  # type: ignore[misc]
             except aioredis.ConnectionError as exc:
                 logger.warning("Redis connection failed: %s", exc)
                 return None

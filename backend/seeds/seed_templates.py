@@ -8,7 +8,11 @@ import uuid
 
 import asyncpg
 
-DB_URL = os.getenv("DATABASE_URL_SEED") or os.getenv("DATABASE_URL") or "postgresql://app:secret@postgres:5432/app_db"
+DB_URL = (
+    os.getenv("DATABASE_URL_SEED")
+    or os.getenv("DATABASE_URL")
+    or "postgresql://app:secret@postgres:5432/app_db"
+)
 # SQLAlchemy uses postgresql+asyncpg:// — asyncpg.connect() only accepts postgresql://
 DB_URL = DB_URL.replace("postgresql+asyncpg://", "postgresql://")
 

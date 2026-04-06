@@ -1,4 +1,3 @@
-
 import os
 
 from sqlalchemy import pool
@@ -44,7 +43,7 @@ async def run_migrations_online() -> None:
     Alembic runs migrations synchronously within the greenlet context.
     """
     connectable = create_async_engine(
-        config.get_main_option("sqlalchemy.url"),
+        config.get_main_option("sqlalchemy.url") or "",
         poolclass=pool.NullPool,
     )
 
