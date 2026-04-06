@@ -20,3 +20,10 @@
 - Frontend scaffold: Vite + React + TypeScript
 - Компоненты: TemplateGallery, TemplateCard, Editor, TextLayer, Toolbar, ExportButton
 - Экспорт PNG/JPEG через html2canvas
+
+---
+
+## 2026-04-06
+
+- Backend api(termplates, render, history, fonts, routers, schemas)
+- 37 тестов(lint, mypy)
