@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTemplates } from '../../hooks/useTemplates'
 import { TemplateCard } from '../TemplateCard'
 import styles from './TemplateGallery.module.css'
@@ -29,6 +30,9 @@ export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
       <header className={styles.header}>
         <h1 className={styles.title}>Template Gallery</h1>
         <p className={styles.subtitle}>Choose a template to start composing</p>
+        <Link to="/history" className={styles.historyLink}>
+          View History →
+        </Link>
       </header>
 
       <nav className={styles.filter} aria-label="Category filter">

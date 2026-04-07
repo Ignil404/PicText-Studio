@@ -6,6 +6,21 @@
 
 .header {
   margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.historyLink {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #60a5fa;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.historyLink:hover {
+  text-decoration: underline;
 }
 
 .title {

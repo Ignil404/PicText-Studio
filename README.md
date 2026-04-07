@@ -21,6 +21,14 @@ docker compose up
 - Backend API docs: http://localhost:8000/docs
 - Health check: http://localhost:8000/api/health
 
+## Features
+
+- Browse templates by category on the gallery page
+- Add, edit, and position text blocks on the canvas editor
+- Export via server-side Pillow render (html2canvas fallback if backend unreachable)
+- View session render history at `/history`
+- Session ID persisted in localStorage — no login required
+
 ## Development Commands
 
 | Command | Description |
@@ -38,12 +46,14 @@ docker compose up
 ┌─────────────┐         ┌──────────────────┐
 │  Frontend   │         │     Backend      │
 │  React SPA  │◄──REST──│   FastAPI +      │
-│  HTML/CSS   │         │   Pillow Render  │
-│  Canvas     │         │                  │
+│  html2canvas│         │   Pillow Render  │
+│  (fallback) │         │                  │
 └─────────────┘         │ ┌────┐  ┌──────┐ │
-                        │ │ PG │  │Redis │ │
-                        │ └────┘  └──────┘ │
-                        └──────────────────┘
+     │                  │ │ PG │  │Redis │ │
+     │   Pillow render  │ └────┘  └──────┘ │
+     └──────────────────┴──────────────────┘
+                        ▲
+     Session history ───┘
 ```
 
 ## Project Structure
@@ -55,9 +65,15 @@ docker compose up
 │   ├── repositories/         # Data access (generic base)
 │   ├── schemas/              # Pydantic models
 │   ├── alembic/              # DB migrations
-│   ├── tests/                # pytest tests
+│   ├── tests/                # pytest tests (37 passing)
 │   └── pyproject.toml        # Dependencies + tool config
 ├── frontend/                 # React + Vite + TypeScript
+│   ├── src/pages/            # HomePage, EditorPage, HistoryPage
+│   ├── src/components/       # Gallery, Editor, ExportButton, HistoryCard
+│   ├── src/services/         # API client (real backend)
+│   ├── src/hooks/            # useTemplates, useEditor, useHistory
+│   └── src/lib/              # session.ts (localStorage UUID)
+├── fonts/                    # 8 bundled .ttf files
 ├── docker-compose.yml        # 4 services: postgres, redis, backend, frontend
 ├── Makefile                  # Convenience targets
 └── CONSTITUTION.md           # Project principles

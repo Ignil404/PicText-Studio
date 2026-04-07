@@ -1,6 +1,13 @@
 .export {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+}
+
+.error {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin: 0;
 }
 
 .btn,
