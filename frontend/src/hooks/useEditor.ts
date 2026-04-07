@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import type { TextElement } from '../types'
 import html2canvas from 'html2canvas'
+import { renderImage, RenderError } from '../services/api'
+import { getSessionId } from '../lib/session'
 
 let nextId = 0
 
@@ -27,12 +29,21 @@ interface UseEditorReturn {
   removeTextElement: (id: string) => void
   selectElement: (id: string | null) => void
   updatePosition: (id: string, x: number, y: number) => void
-  exportCanvas: (element: HTMLElement, format: 'png' | 'jpeg', filename: string) => Promise<void>
+  exportCanvas: (
+    element: HTMLElement,
+    templateId: string,
+    format: 'png' | 'jpeg',
+    filename: string,
+  ) => Promise<void>
+  exportError: string | null
+  exporting: boolean
 }
 
 export function useEditor(): UseEditorReturn {
   const [textElements, setTextElements] = useState<TextElement[]>([])
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   const selectedElement =
     textElements.find((el) => el.id === selectedElementId) ?? null
@@ -70,18 +81,49 @@ export function useEditor(): UseEditorReturn {
   const exportCanvas = useCallback(
     async (
       element: HTMLElement,
+      templateId: string,
       format: 'png' | 'jpeg',
       filename: string,
     ) => {
+      setExporting(true)
+      setExportError(null)
+
+      // Convert textElements to text_blocks for the API
+      const textBlocks = textElements.map(({ id: _id, ...rest }) => rest)
+
+      // ── Primary: server-side Pillow render ──
+      try {
+        const blob = await renderImage({
+          template_id: templateId,
+          text_blocks: textBlocks,
+          format,
+          session_id: getSessionId(),
+        })
+
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${filename}.${format}`
+        a.click()
+        URL.revokeObjectURL(url)
+        setExporting(false)
+        return
+      } catch (err: unknown) {
+        // Backend validation error (e.g. 422) — no fallback
+        if (err instanceof RenderError && err.status === 422) {
+          setExportError(err.message)
+          setExporting(false)
+          return
+        }
+        // Network error (backend unreachable) — fall through to html2canvas
+      }
+
+      // ── Fallback: client-side html2canvas ──
       const targetWidth = element.offsetWidth
       const targetHeight = element.offsetHeight
 
-      // Build an offscreen clone with inputs replaced by spans (to fix
-      // cloneNode not copying .value) and styled to render pixel-perfect
-      // without the CSS transform applied in the visible editor.
       const clone = element.cloneNode(true) as HTMLElement
 
-      // Swap all inputs/textareas for span elements with the text rendered
       clone.querySelectorAll('input, textarea').forEach((input) => {
         const val = (input as HTMLInputElement | HTMLTextAreaElement).value
         const span = document.createElement('span')
@@ -98,7 +140,6 @@ export function useEditor(): UseEditorReturn {
         }
       })
 
-      // Strip selection border styles
       clone.querySelectorAll(
         `[style*="outline"]`,
       ).forEach((el) => {
@@ -141,9 +182,10 @@ export function useEditor(): UseEditorReturn {
         )
       } finally {
         document.body.removeChild(clone)
+        setExporting(false)
       }
     },
-    [],
+    [textElements],
   )
 
   return {
@@ -156,5 +198,7 @@ export function useEditor(): UseEditorReturn {
     selectElement,
     updatePosition,
     exportCanvas,
+    exportError,
+    exporting,
   }
 }

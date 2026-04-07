@@ -21,6 +21,8 @@ export function Editor({ template }: EditorProps) {
     selectElement,
     updatePosition,
     exportCanvas,
+    exportError,
+    exporting,
   } = useEditor()
 
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -150,8 +152,12 @@ export function Editor({ template }: EditorProps) {
 
           <ExportButton
             canvasRef={canvasRef}
+            templateId={String(template.id)}
             onExport={exportCanvas}
             templateName={template.name}
+            exporting={exporting}
+            error={exportError}
+            onClearError={() => {/* errors cleared on next export attempt */ }}
           />
         </aside>
       </div>

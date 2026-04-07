@@ -1,62 +1,45 @@
-import type { Template, RenderRequest } from '../types';
+import type { Template, RenderRequest, HistoryEntry } from '../types';
+import { getSessionId } from '../lib/session';
 
 const API_BASE = '/api';
 
-function svgPlaceholder(w: number, h: number, bg: string, fg: string, label: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
-    <rect width="100%" height="100%" fill="${bg}"/>
-    <text x="50%" y="50%" fill="${fg}" font-family="sans-serif" font-size="${Math.floor(h/8)}"
-          text-anchor="middle" dominant-baseline="middle">${label}</text>
-  </svg>`;
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
-}
-
-// Mock data — replace with real fetch when backend endpoints exist
-const MOCK_TEMPLATES: Template[] = [
-  {
-    id: 't1',
-    name: 'Drake Hotline',
-    category: 'reaction',
-    imageUrl: svgPlaceholder(600, 600, '#dc2626', '#ffffff', 'Drake Hotline'),
-    width: 600,
-    height: 600,
-  },
-  {
-    id: 't2',
-    name: 'Distracted Boyfriend',
-    category: 'classic',
-    imageUrl: svgPlaceholder(800, 533, '#2563eb', '#ffffff', 'Distracted Boyfriend'),
-    width: 800,
-    height: 533,
-  },
-  {
-    id: 't3',
-    name: 'Two Buttons',
-    category: 'decision',
-    imageUrl: svgPlaceholder(680, 600, '#16a34a', '#ffffff', 'Two Buttons'),
-    width: 680,
-    height: 600,
-  },
-];
+// ── Templates ──────────────────────────────────────────────
 
 export async function fetchTemplates(): Promise<Template[]> {
-  // TODO: swap to real API when backend has GET /api/templates
-  // const res = await fetch(`${API_BASE}/templates`);
-  // if (!res.ok) throw new Error('Failed to fetch templates');
-  // return res.json();
-  await new Promise((r) => setTimeout(r, 300));
-  return MOCK_TEMPLATES;
+  const res = await fetch(`${API_BASE}/templates/`);
+  if (!res.ok) throw new Error('Failed to fetch templates');
+  return res.json();
 }
 
 export async function fetchTemplateById(id: string): Promise<Template | undefined> {
-  const templates = await fetchTemplates();
-  return templates.find((t) => t.id === id);
+  const res = await fetch(`${API_BASE}/templates/${id}/`);
+  if (!res.ok) {
+    if (res.status === 404) return undefined;
+    throw new Error(`Failed to fetch template: ${res.status}`);
+  }
+  return res.json();
 }
+
+export async function fetchCategories(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/templates/categories`);
+  if (!res.ok) throw new Error('Failed to fetch categories');
+  return res.json();
+}
+
+// ── History ────────────────────────────────────────────────
+
+export async function fetchHistory(sessionId: string): Promise<HistoryEntry[]> {
+  const res = await fetch(`${API_BASE}/history/${sessionId}`);
+  if (!res.ok) throw new Error('Failed to fetch history');
+  return res.json();
+}
+
+// ── Render ─────────────────────────────────────────────────
 
 let renderAbortController: AbortController | null = null;
 
 export async function renderImage(
-  request: RenderRequest,
+  request: Omit<RenderRequest, 'session_id'> & { session_id?: string },
   signal?: AbortSignal,
 ): Promise<Blob> {
   if (renderAbortController) {
@@ -65,16 +48,21 @@ export async function renderImage(
   renderAbortController = new AbortController();
   const effectiveSignal = signal ?? renderAbortController.signal;
 
+  const body = {
+    ...request,
+    session_id: request.session_id ?? getSessionId(),
+  };
+
   const res = await fetch(`${API_BASE}/render`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
+    body: JSON.stringify(body),
     signal: effectiveSignal,
   });
 
   if (!res.ok) {
-    const error = (await res.json().catch(() => ({ detail: `HTTP ${res.status}` })));
-    throw new Error(error.detail ?? `Render failed: ${res.status}`);
+    const error = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new RenderError(error.detail ?? `Render failed: ${res.status}`, res.status);
   }
 
   return res.blob();
@@ -84,5 +72,17 @@ export function cancelRender(): void {
   if (renderAbortController) {
     renderAbortController.abort();
     renderAbortController = null;
+  }
+}
+
+// ── Errors ─────────────────────────────────────────────────
+
+export class RenderError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = 'RenderError';
   }
 }
