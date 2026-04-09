@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import io
 import uuid
 from pathlib import Path
 
@@ -13,6 +15,33 @@ from schemas import HistoryEntry, RenderRequest, RenderResponse, TextBlock
 
 class RenderError(Exception):
     """Raised when image rendering fails."""
+
+
+def _resolve_image_source(image_path: str) -> Image.Image:
+    """Open image from file path or data URI."""
+    if image_path.startswith("data:"):
+        # Decode base64 data URI
+        header, encoded = image_path.split(",", 1)
+        raw = base64.b64decode(encoded)
+
+        # SVG → rasterise via cairosvg if available, else fail gracefully
+        if "svg" in header:
+            try:
+                import cairosvg  # type: ignore
+
+                png_bytes = cairosvg.svg2png(
+                    bytestring=raw,
+                    output_width=1080,
+                    output_height=1080,
+                )
+                return Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+            except ImportError:
+                # Fallback: try PIL directly (won't work for SVG, but let Pillow try)
+                pass
+
+        return Image.open(io.BytesIO(raw)).convert("RGBA")
+    else:
+        return Image.open(image_path).convert("RGBA")
 
 
 class RenderService:
@@ -29,14 +58,42 @@ class RenderService:
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
 
-    def _load_font(self, font_family: str, font_size: int) -> ImageFont.FreeTypeFont:
+    def _load_font(
+        self,
+        font_family: str,
+        font_size: int,
+        *,
+        bold: bool = False,
+        italic: bool = False,
+    ) -> ImageFont.FreeTypeFont:
         filename = FONT_REGISTRY.get(font_family)
         if filename is None:
             raise RenderError(f"Unknown font family: {font_family!r}")
+
+        # Handle bold variant: prefer explicit bold font file
+        if bold and font_family == "Roboto":
+            filename = "Roboto-Bold.ttf"
+        # Italic handling: apply style flag if supported
+        # (Pillow doesn't auto-synthesize italic; we use the base font)
+
         font_path = self._font_dir / filename
         if not font_path.exists():
             raise RenderError(f"Font file not found: {font_path}")
         return ImageFont.truetype(str(font_path), font_size)
+
+    @staticmethod
+    def _percent_to_pixel(pct: float, dimension: int) -> float:
+        """Convert percentage coordinate to pixel value."""
+        return (pct / 100) * dimension
+
+    @staticmethod
+    def _text_align_to_anchor(text_align: str | None) -> str:
+        """Map text_align value to Pillow anchor string."""
+        if text_align == "center":
+            return "mm"
+        if text_align == "right":
+            return "rm"
+        return "lm"
 
     async def render_image(self, request: RenderRequest) -> RenderResponse:
         template = await self._template_repo.get_by_id(request.template_id)
@@ -44,16 +101,26 @@ class RenderService:
             raise RenderError(f"Template not found: {request.template_id}")
 
         try:
-            img = Image.open(template.image_path).convert("RGBA")
+            img = _resolve_image_source(template.image_path)
             draw = ImageDraw.Draw(img)
 
             for block in request.text_blocks:
-                font = self._load_font(block.font_family, block.font_size)
+                font = self._load_font(
+                    block.font_family,
+                    block.font_size,
+                    bold=block.bold,
+                    italic=block.italic,
+                )
+                px = self._percent_to_pixel(block.x, img.width)
+                py = self._percent_to_pixel(block.y, img.height)
+                anchor = self._text_align_to_anchor(block.text_align)
+
                 draw.text(
-                    (block.x, block.y),
+                    (px, py),
                     block.text,
                     font=font,
                     fill=block.color,
+                    anchor=anchor,
                 )
 
             file_ext = request.format

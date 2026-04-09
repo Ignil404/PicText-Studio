@@ -58,6 +58,16 @@ services:
       backend:
         condition: service_healthy
 
+  frontend_old:
+    build:
+      context: ./frontend_old
+      dockerfile: Dockerfile
+    ports:
+      - "5174:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   pgdata:
   rendered_images:

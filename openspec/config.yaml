@@ -2,10 +2,11 @@ schema: spec-driven
 
 context: |
   Tech stack: Python 3.12 + FastAPI + SQLAlchemy async + Alembic (backend),
-    React 18 + Vite + TypeScript (frontend), PostgreSQL + Redis, Docker Compose.
-  Canvas editor: HTML/CSS overlay + html2canvas for export (MVP).
-  Server-side rendering via Pillow on backend.
-  Session-based history (no auth MVP).
-  8 bundled .ttf fonts in /fonts volume.
+    React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui (frontend),
+    PostgreSQL + Redis, Docker Compose.
+  Frontend: 15 gradient templates with canvas live preview,
+    server-side render via Pillow + cairosvg, session-based history.
+  Auth/Profile pages are stubs — session UUID from localStorage.
+  18 bundled .ttf fonts in /fonts volume (core + Google Fonts).
   Code quality: ruff + mypy + pytest, pre-commit required.
   See CONSTITUTION.md for project principles.
