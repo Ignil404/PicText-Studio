@@ -27,8 +27,13 @@ def _resolve_image_source(image_path: str) -> Image.Image:
         # SVG → rasterise via cairosvg if available, else fail gracefully
         if "svg" in header:
             try:
-                import cairosvg  # type: ignore[import-untyped]
-                png_bytes = cairosvg.svg2png(bytestring=raw, output_width=1080, output_height=1080)
+                import cairosvg  # type: ignore[import-not-found]
+
+                png_bytes = cairosvg.svg2png(
+                    bytestring=raw,
+                    output_width=1080,
+                    output_height=1080,
+                )
                 return Image.open(io.BytesIO(png_bytes)).convert("RGBA")
             except ImportError:
                 # Fallback: try PIL directly (won't work for SVG, but let Pillow try)
@@ -101,8 +106,10 @@ class RenderService:
 
             for block in request.text_blocks:
                 font = self._load_font(
-                    block.font_family, block.font_size,
-                    bold=block.bold, italic=block.italic,
+                    block.font_family,
+                    block.font_size,
+                    bold=block.bold,
+                    italic=block.italic,
                 )
                 px = self._percent_to_pixel(block.x, img.width)
                 py = self._percent_to_pixel(block.y, img.height)

@@ -176,6 +176,7 @@ async def test_render_image_records_history(render_service, mock_repo, mock_hist
 
 # --- Coordinate conversion and anchor mapping tests ---
 
+
 def test_percent_to_pixel():
     assert RenderService._percent_to_pixel(50, 600) == 300.0
     assert RenderService._percent_to_pixel(30, 600) == 180.0

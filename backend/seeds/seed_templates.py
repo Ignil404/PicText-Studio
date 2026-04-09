@@ -20,7 +20,13 @@ def _esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def gradient_svg(w: int, h: int, colors: list[str], angle: float = 135, preview_zones: list[dict] | None = None) -> str:
+def gradient_svg(
+    w: int,
+    h: int,
+    colors: list[str],
+    angle: float = 135,
+    preview_zones: list[dict] | None = None,
+) -> str:
     """SVG with gradient fill + text zones rendered on the preview image."""
     grad = (
         '<linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">'
@@ -43,7 +49,12 @@ def gradient_svg(w: int, h: int, colors: list[str], angle: float = 135, preview_
             for i, line in enumerate(lines):
                 extra = ""
                 if z.get("shadow"):
-                    extra = f' style="paint-order:stroke;stroke:#000;stroke-width:{max(2, fs // 10)}px;stroke-linecap:round;stroke-linejoin:round"'
+                    sw = max(2, fs // 10)
+                    extra = (
+                        ' style="paint-order:stroke;'
+                        f"stroke:#000;stroke-width:{sw}px;"
+                        'stroke-linecap:round;stroke-linejoin:round"'
+                    )
                 text_svg += (
                     f'<text x="{x}" y="{start_y + i * lh}" '
                     f'fill="{z.get("color", "#ffffff")}" '
@@ -55,15 +66,25 @@ def gradient_svg(w: int, h: int, colors: list[str], angle: float = 135, preview_
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}">'
         f'{grad}<rect width="100%" height="100%" fill="url(#g)"/>'
-        f'{text_svg}'
+        f"{text_svg}"
         f"</svg>"
     )
     return f"data:image/svg+xml;base64,{base64.b64encode(svg.encode()).decode()}"
 
 
-def tz(id: str, x: float, y: float, font_family: str, font_size: int, color: str,
-       default_text: str = "", label: str = "", width: int | None = None, height: int | None = None,
-       shadow: bool = False) -> dict:
+def tz(
+    id: str,
+    x: float,
+    y: float,
+    font_family: str,
+    font_size: int,
+    color: str,
+    default_text: str = "",
+    label: str = "",
+    width: int | None = None,
+    height: int | None = None,
+    shadow: bool = False,
+) -> dict:
     """Shorthand for a text zone (both preview + actual zone data)."""
     return {
         "id": id,
@@ -81,8 +102,13 @@ def tz(id: str, x: float, y: float, font_family: str, font_size: int, color: str
 
 
 def make_template(
-    uid: int, name: str, category: str,
-    w: int, h: int, colors: list[str], angle: float,
+    uid: int,
+    name: str,
+    category: str,
+    w: int,
+    h: int,
+    colors: list[str],
+    angle: float,
     text_zones: list[dict],
 ) -> dict:
     """Build a template dict — text_zones rendered on preview image."""
@@ -101,6 +127,7 @@ def make_template(
     }
 
 
+# mypy: disable-error-code="type-arg"
 # fmt: off
 TEMPLATES = [
     # === MOTIVATION ===
@@ -111,8 +138,10 @@ TEMPLATES = [
         ]),
     make_template(2, "Сила воли", "motivation", 1080, 1080,
         ["#0f0c29", "#302b63", "#24243e"], 180, [
-            tz("title", 540, 378, "Impact", 80, "#ff6b6b", "НЕ СДАВАЙСЯ", shadow=True),
-            tz("subtitle", 540, 648, "Comfortaa", 28, "#e0e0e0", "Боль временна, гордость — навсегда"),
+            tz("title", 540, 378, "Impact", 80,
+               "#ff6b6b", "НЕ СДАВАЙСЯ", shadow=True),
+            tz("subtitle", 540, 648, "Comfortaa", 28,
+               "#e0e0e0", "Боль временна, гордость — навсегда"),
         ]),
     make_template(3, "Мечтай громко", "motivation", 1080, 1350,
         ["#a18cd1", "#fbc2eb", "#f6d365"], 160, [
@@ -124,7 +153,8 @@ TEMPLATES = [
     make_template(4, "Классический демотиватор", "demotivator", 1080, 1080,
         ["#000000", "#111111"], 135, [
             tz("title", 540, 400, "Impact", 64, "#ffffff", "РАБОТА"),
-            tz("subtitle", 540, 972, "Nunito", 24, "#cccccc", "Не волк, в лес не убежит.\nА вот ты можешь."),
+            tz("subtitle", 540, 972, "Nunito", 24, "#cccccc",
+               "Не волк, в лес не убежит.\nА вот ты можешь."),
         ]),
     make_template(5, "Современный демотиватор", "demotivator", 1080, 1080,
         ["#1a1a2e", "#16213e", "#0f3460"], 135, [
@@ -141,8 +171,10 @@ TEMPLATES = [
         ]),
     make_template(7, "С Новым Годом!", "greeting", 1080, 1080,
         ["#0a1628", "#1a237e", "#283593"], 180, [
-            tz("title", 540, 382, "Pacifico", 72, "#ffd700", "С НОВЫМ\nГОДОМ!", shadow=True),
-            tz("subtitle", 540, 734, "Comfortaa", 26, "#e8eaf6", "Счастья, здоровья и исполнения желаний! ✨"),
+            tz("title", 540, 382, "Pacifico", 72,
+               "#ffd700", "С НОВЫМ\nГОДОМ!", shadow=True),
+            tz("subtitle", 540, 734, "Comfortaa", 26,
+               "#e8eaf6", "Счастья, здоровья и исполнения желаний! ✨"),
         ]),
     make_template(8, "С любовью", "greeting", 1080, 1080,
         ["#ee9ca7", "#ffdde1", "#f8b500"], 135, [
@@ -153,37 +185,54 @@ TEMPLATES = [
     # === MEMES ===
     make_template(9, "Импакт мем", "meme", 1080, 1080,
         ["#00b4db", "#0083b0"], 180, [
-            tz("top", 540, 80, "Impact", 52, "#ffffff", "КОГДА НАПИСАЛ КОД", shadow=True),
-            tz("bottom", 540, 1000, "Impact", 48, "#ffffff", "И ОН ЗАРАБОТАЛ\nС ПЕРВОГО РАЗА", shadow=True),
+            tz("top", 540, 80, "Impact", 52,
+               "#ffffff", "КОГДА НАПИСАЛ КОД", shadow=True),
+            tz("bottom", 540, 1000, "Impact", 48,
+               "#ffffff", "И ОН ЗАРАБОТАЛ\nС ПЕРВОГО РАЗА", shadow=True),
         ]),
     make_template(10, "Жизненный мем", "meme", 1080, 1350,
         ["#f7971e", "#ffd200"], 135, [
-            tz("setup", 540, 520, "Fredoka", 40, "#333333", "Я: сегодня лягу пораньше"),
-            tz("punchline", 540, 945, "Fredoka", 44, "#333333", "Также я в 3 часа ночи:", shadow=True),
+            tz("setup", 540, 520, "Fredoka", 40,
+               "#333333", "Я: сегодня лягу пораньше"),
+            tz("punchline", 540, 945, "Fredoka", 44,
+               "#333333", "Также я в 3 часа ночи:", shadow=True),
         ]),
     make_template(15, "Когда всё по плану", "meme", 1080, 1080,
         ["#a1c4fd", "#c2e9fb"], 135, [
-            tz("top", 540, 80, "Impact", 52, "#ffffff", "КОГДА ВСЁ ИДЁТ ПО ПЛАНУ", shadow=True),
-            tz("bottom", 540, 1000, "Impact", 48, "#ffffff", "И ЭТО ПЛАН БЫЛ «НЕ ПЛАНИРОВАТЬ»", shadow=True),
+            tz("top", 540, 80, "Impact", 52,
+               "#ffffff", "КОГДА ВСЁ ИДЁТ ПО ПЛАНУ", shadow=True),
+            tz("bottom", 540, 1000, "Impact", 48,
+               "#ffffff", "И ЭТО ПЛАН БЫЛ «НЕ ПЛАНИРОВАТЬ»", shadow=True),
         ]),
 
     # === QUOTES ===
     make_template(11, "Минималистичная цитата", "quote", 1080, 1080,
         ["#ffecd2", "#fcb69f"], 135, [
-            tz("quote", 540, 404, "Caveat", 44, "#4a3728", "«Будь тем изменением,\nкоторое хочешь\nувидеть в мире»"),
-            tz("author", 540, 778, "Comfortaa", 24, "#7a5f50", "— Махатма Ганди"),
+            tz("quote", 540, 404, "Caveat", 44, "#4a3728",
+               "«Будь тем изменением,\n"
+               "которое хочешь\n"
+               "увидеть в мире»"),
+            tz("author", 540, 778, "Comfortaa", 24,
+               "#7a5f50", "— Махатма Ганди"),
         ]),
     make_template(12, "Тёмная цитата", "quote", 1080, 1350,
         ["#141e30", "#243b55"], 180, [
-            tz("quote", 540, 540, "Satisfy", 42, "#e8d5b7", "«Тот, кто двигает горы,\nначинает с того,\nчто убирает\nмаленькие камни»", shadow=True),
-            tz("author", 540, 945, "Comfortaa", 22, "#a89070", "— Конфуций"),
+            tz("quote", 540, 540, "Satisfy", 42, "#e8d5b7",
+               "«Тот, кто двигает горы,\n"
+               "начинает с того,\n"
+               "что убирает\n"
+               "маленькие камни»", shadow=True),
+            tz("author", 540, 945, "Comfortaa", 22,
+               "#a89070", "— Конфуций"),
         ]),
 
     # === REACTIONS ===
     make_template(13, "Этот мем — ты", "reaction", 1080, 1080,
         ["#fc5c7d", "#6a82fb"], 135, [
-            tz("top", 540, 350, "Impact", 48, "#ffffff", "КОГДА ГОВОРИШЬ\n«СЕЙЧАС СДЕЛАЮ»", shadow=True),
-            tz("bottom", 540, 930, "Impact", 48, "#ffffff", "А САМ ОТКРЫЛ НЕТФЛИКС", shadow=True),
+            tz("top", 540, 350, "Impact", 48, "#ffffff",
+               "КОГДА ГОВОРИШЬ\n«СЕЙЧАС СДЕЛАЮ»", shadow=True),
+            tz("bottom", 540, 930, "Impact", 48,
+               "#ffffff", "А САМ ОТКРЫЛ НЕТФЛИКС", shadow=True),
         ]),
     make_template(14, "Ожидание vs Реальность", "reaction", 1080, 1080,
         ["#ff9a9e", "#fecfef", "#fad0c4"], 135, [

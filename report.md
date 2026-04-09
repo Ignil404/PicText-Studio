@@ -42,9 +42,16 @@
 
 ---
 
+## 2026-04-08
+
+- Анализ UI проекта, выбор визуального направления для редизайна
+- Начат редизайн фронтенда
+
+---
+
 ## 2026-04-09
 
 - Редизайн фронтенда: Tailwind CSS + shadcn/ui, canvas live preview, 15 шаблонов с градиентами
-- Серверный рендер: Pillow + cairosvg (SVG data URI → PNG), 10 Google Fonts добавлены
-- Страница истории, session UUID вместо Supabase Auth
-- 39/39 тестов, CI/CD обновлён, старый фронтенд сохранён как frontend_old
+- Серверный рендер: Pillow + cairosvg (SVG data URI в PNG), 10 Google Fonts добавлены
+- Страница истории, session UUID
+- Старый фронтенд сохранён как frontend_old

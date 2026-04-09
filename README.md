@@ -83,8 +83,7 @@ docker compose up
 ├── Makefile
 ├── .gitlab-ci.yml            # lint → type-check → test → frontend-build
 ├── openspec/                 # спецификации и заархивированные изменения
-├── report.md                 # ежедневный отчёт
-└── CONSTITUTION.md           # принципы проекта
+└── report.md                 # ежедневный отчёт
 ```
 
 ## Шрифты
