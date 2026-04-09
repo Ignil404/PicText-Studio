@@ -27,7 +27,7 @@ def _resolve_image_source(image_path: str) -> Image.Image:
         # SVG → rasterise via cairosvg if available, else fail gracefully
         if "svg" in header:
             try:
-                import cairosvg  # type: ignore[import-not-found]
+                import cairosvg  # type: ignore
 
                 png_bytes = cairosvg.svg2png(
                     bytestring=raw,
