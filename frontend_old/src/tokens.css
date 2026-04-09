@@ -1,0 +1,101 @@
+/* =========================================================
+   Design Tokens — Cinema + Brutalism (Dark)
+   Import once in index.css.  Use var(--token) everywhere.
+   ========================================================= */
+
+:root {
+  /* ---- Colours ---- */
+  --color-bg:          #050505;
+  --color-surface:     #0a0a0a;
+  --color-surface-elev:#111111;
+  --color-border:      #1e1e1e;
+  --color-border-hover:#333333;
+  --color-text:        #f0f0f0;
+  --color-text-muted:  #888888;
+  --color-text-dim:    #444444;
+  --color-accent:      #22d3ee;   /* cyan */
+  --color-accent-hover:#06b6d4;
+  --color-accent-glow: rgba(34, 211, 238, 0.35);
+
+  /* Category accents */
+  --color-category-classic:   #facc15;  /* amber */
+  --color-category-reaction:  #f87171;  /* red */
+  --color-category-decision:  #a78bfa;  /* violet */
+  --color-category-opinion:   #34d399;  /* emerald */
+  --color-category-escalation:#fb923c;  /* orange */
+
+  /* Semantic */
+  --color-danger:      #f87171;
+  --color-danger-bg:   #3d0a0a;
+  --color-success:     #34d399;
+  --color-link:        #60a5fa;
+  --color-selected-bg: #0c1a2e;
+  --color-selected-bdr:#3b82f6;
+
+  /* ---- Spacing (8px base rhythm, expanded range) ---- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  48px;
+  --space-9:  64px;
+  --space-10: 80px;
+  --space-11: 96px;
+
+  /* ---- Typography ---- */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-display:   3.5rem;   /* 56px — brutalist hero */
+  --text-heading:   1.75rem;  /* 28px */
+  --text-subhead:   1.1rem;   /* 17.6px */
+  --text-body:      0.95rem;  /* 15.2px */
+  --text-caption:   0.75rem;  /* 12px */
+  --text-small:     0.85rem;  /* 13.6px */
+  --text-xs:        0.7rem;   /* 11.2px */
+
+  --leading-tight:  1.1;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.7;
+
+  --weight-normal: 400;
+  --weight-medium:500;
+  --weight-semibold:600;
+  --weight-bold:   700;
+  --weight-display:900;
+
+  /* ---- Border Radii ---- */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* ---- Shadows (deeper, cinematic) ---- */
+  --shadow-card:    0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-canvas:  0 8px 48px rgba(0, 0, 0, 0.7);
+  --shadow-float:   0 12px 48px rgba(0, 0, 0, 0.75);
+  --shadow-glow:    0 0 24px var(--color-accent-glow);
+  --shadow-glow-intense: 0 0 32px rgba(34, 211, 238, 0.5);
+
+  /* ---- Gradients ---- */
+  --gradient-hero: linear-gradient(135deg, #22d3ee 0%, #a78bfa 50%, #f87171 100%);
+  --gradient-card-overlay: linear-gradient(to top, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.4) 50%, transparent 100%);
+  --bg-radial: radial-gradient(ellipse at 50% 0%, #0f172a 0%, #050505 70%);
+
+  /* ---- Transitions ---- */
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.15s ease;
+  --transition-slow: 0.2s ease;
+  --transition-spring:0.3s ease;
+
+  /* ---- Z-index ---- */
+  --z-canvas:    1;
+  --z-toolbar:  10;
+  --z-overlay:  20;
+  --z-header:   30;
+}

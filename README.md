@@ -1,14 +1,14 @@
-# Image Text Constructor
+# PicText Studio
 
-Internship project (DL2026 Spring FSD2). A web application for creating text-overlay images: browse template backgrounds, add text blocks via a canvas editor, and download the final rendered image.
+Веб-приложение для создания картинок с текстом на шаблонах — галерея шаблонов, canvas-редактор, серверный рендер, история рендеров.
 
 ## Tech Stack
 
-- **Frontend**: React 18 + Vite + TypeScript
-- **Backend**: FastAPI + Python 3.12 + Pillow
+- **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui + TanStack Query
+- **Backend**: FastAPI + Python 3.12 + Pillow + cairosvg (SVG → PNG)
 - **Database**: PostgreSQL + SQLAlchemy (async) + Alembic
 - **Cache**: Redis (template list, 600s TTL)
-- **Infra**: Docker Compose
+- **Infra**: Docker Compose (4 сервиса)
 
 ## Quick Start
 
@@ -17,74 +17,87 @@ cp .env.example .env
 docker compose up
 ```
 
-- Frontend: http://localhost:5173
-- Backend API docs: http://localhost:8000/docs
-- Health check: http://localhost:8000/api/health
+- **Новый фронтенд**: http://localhost:5173
+- **Старый фронтенд**: http://localhost:5174 (для сравнения)
+- **API docs**: http://localhost:8000/docs
+- **Health**: http://localhost:8000/api/health
 
-## Features
+## Возможности
 
-- Browse templates by category on the gallery page
-- Add, edit, and position text blocks on the canvas editor
-- Export via server-side Pillow render (html2canvas fallback if backend unreachable)
-- View session render history at `/history`
-- Session ID persisted in localStorage — no login required
+- 🎨 Галерея из 15 шаблонов с градиентными фонами и эмодзи-декорациями
+- ✏️ Canvas-редактор: текст редактируется в реальном времени на превью
+- 🖨️ Серверный рендер через Pillow + cairosvg (SVG data URI → PNG)
+- 📜 История рендеров по session ID (localStorage, без логина)
+- 🔐 Страницы авторизации и профиля — заглушки (будут реализованы позже)
 
 ## Development Commands
 
 | Command | Description |
 |---|---|
-| `make dev` | Start all services |
-| `make down` | Stop all services |
-| `make lint` | Run ruff + mypy |
-| `make format` | Auto-format backend |
-| `make test` | Run pytest |
-| `make build` | Build Docker images |
+| `make dev` | Запустить все сервисы |
+| `make down` | Остановить все сервисы |
+| `make lint` | Ruff + mypy |
+| `make format` | Авто-формат backend |
+| `make test` | Запустить pytest |
+| `make build` | Собрать Docker-образы |
 
-## Architecture
-
-```
-┌─────────────┐         ┌──────────────────┐
-│  Frontend   │         │     Backend      │
-│  React SPA  │◄──REST──│   FastAPI +      │
-│  html2canvas│         │   Pillow Render  │
-│  (fallback) │         │                  │
-└─────────────┘         │ ┌────┐  ┌──────┐ │
-     │                  │ │ PG │  │Redis │ │
-     │   Pillow render  │ └────┘  └──────┘ │
-     └──────────────────┴──────────────────┘
-                        ▲
-     Session history ───┘
-```
-
-## Project Structure
+## Архитектура
 
 ```
-├── backend/                  # FastAPI application
-│   ├── routers/              # HTTP endpoints
-│   ├── services/             # Business logic
-│   ├── repositories/         # Data access (generic base)
-│   ├── schemas/              # Pydantic models
-│   ├── alembic/              # DB migrations
-│   ├── tests/                # pytest tests (37 passing)
-│   └── pyproject.toml        # Dependencies + tool config
-├── frontend/                 # React + Vite + TypeScript
-│   ├── src/pages/            # HomePage, EditorPage, HistoryPage
-│   ├── src/components/       # Gallery, Editor, ExportButton, HistoryCard
-│   ├── src/services/         # API client (real backend)
-│   ├── src/hooks/            # useTemplates, useEditor, useHistory
-│   └── src/lib/              # session.ts (localStorage UUID)
-├── fonts/                    # 8 bundled .ttf files
-├── docker-compose.yml        # 4 services: postgres, redis, backend, frontend
-├── Makefile                  # Convenience targets
-└── CONSTITUTION.md           # Project principles
+┌──────────────────┐         ┌──────────────────────┐
+│   Frontend :5173 │         │     Backend :8000    │
+│   React + Vite   │◄──REST──│   FastAPI + Pillow   │
+│   Tailwind CSS   │         │   cairosvg (SVG→PNG) │
+│   shadcn/ui      │         │                      │
+│   Canvas preview │         │  ┌────┐  ┌──────┐   │
+└──────────────────┘         │  │ PG │  │Redis │   │
+         ▲                   │  └────┘  └──────┘   │
+         │                   └──────────────────────┘
+   Server render ◄────────────────┘
+   Session history ◄────────────┘
 ```
 
-## Principles
+## Структура проекта
 
-See [CONSTITUTION.md](CONSTITUTION.md):
+```
+├── backend/                  # FastAPI
+│   ├── routers/              # endpoints: health, templates, render, history
+│   ├── services/             # RenderService (Pillow + cairosvg), TemplateService, CacheService
+│   ├── repositories/         # TemplateRepository, RenderHistoryRepository
+│   ├── schemas/              # Pydantic: TextZone, TemplateResponse, RenderRequest, HistoryEntry
+│   ├── constants.py          # FONT_REGISTRY (18 шрифтов)
+│   ├── seeds/                # seed_templates.py (15 шаблонов)
+│   ├── alembic/              # миграции БД
+│   ├── tests/                # pytest (39 тестов)
+│   └── pyproject.toml
+├── frontend/                 # React + Vite + Tailwind + shadcn/ui (НОВЫЙ)
+│   ├── src/pages/            # Index (галерея), Editor (canvas), History, Auth/Profile (заглушки)
+│   ├── src/components/       # CanvasPreview, TemplateCard, EditorPanel, 40+ shadcn/ui
+│   ├── src/data/             # templates.ts (15 шаблонов с градиентами и эмодзи)
+│   ├── src/hooks/            # useSession (localStorage UUID), useToast
+│   ├── src/lib/              # session.ts
+│   └── src/types/            # template.ts
+├── frontend_old/             # Старый фронтенд (сохранён для сравнения)
+├── fonts/                    # 18 .ttf (8 core + 10 Google Fonts)
+├── docker-compose.yml        # postgres, redis, backend, frontend, frontend_old
+├── Makefile
+├── .gitlab-ci.yml            # lint → type-check → test → frontend-build
+├── openspec/                 # спецификации и заархивированные изменения
+├── report.md                 # ежедневный отчёт
+└── CONSTITUTION.md           # принципы проекта
+```
 
-- Docker-first deployment
-- PostgreSQL for persistent data, Redis for cache only
-- Clean frontend/backend separation
-- Single Responsibility Principle
-- Code quality: ruff + mypy + pytest
+## Шрифты
+
+| Категория | Шрифты |
+|---|---|
+| Core | Roboto, Impact, Arial, Comic Sans, Times New Roman, Courier New, Open Sans |
+| Google Fonts | Fredoka, Nunito, Pacifico, Lobster, Caveat, Permanent Marker, Satisfy, Comfortaa, Rubik Mono One, Inter |
+
+## CI/CD
+
+Pipeline (`.gitlab-ci.yml`):
+1. **lint** — ruff check + format
+2. **type-check** — mypy (с cairosvg deps)
+3. **test** — pytest с postgres + redis services
+4. **frontend-build** — Vite production build (node:22)

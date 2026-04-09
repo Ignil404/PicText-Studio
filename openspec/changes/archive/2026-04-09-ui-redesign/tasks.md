@@ -1,0 +1,40 @@
+# Tasks: UI Redesign
+
+- [x] T001 Copy image-weaver source to `frontend/` (excluding node_modules, .git, supabase, lovable)
+- [x] T002 Remove `src/integrations/supabase/` and `src/integrations/lovable/`
+- [x] T003 Create `src/lib/session.ts` — UUID v4 via `crypto.randomUUID()` in localStorage
+- [x] T004 Replace `useAuth` hook with `useSession` (SessionProvider, no Supabase)
+- [x] T005 Rewrite `src/pages/Index.tsx` — gallery with local templates + canvas preview cards
+- [x] T006 Rewrite `src/pages/Editor.tsx` — CanvasPreview + EditorPanel + server render
+- [x] T007 Create `src/pages/History.tsx` — fetch from `GET /api/history/:session_id`
+- [x] T008 Create stub `src/pages/Auth.tsx` — "feature coming soon"
+- [x] T009 Create stub `src/pages/Profile.tsx` — shows session ID
+- [x] T010 Create stub `src/pages/SharedImage.tsx` — "not available"
+- [x] T011 Update `src/pages/NotFound.tsx` — keep as-is
+- [x] T012 Rewrite `src/App.tsx` — routes: /, /editor/:id, /history, /auth, /profile, /shared/*, *
+- [x] T013 Update `src/components/Header.tsx` — History + Auth buttons, no user state
+- [x] T014 Update `src/components/EditorPanel.tsx` — server render button replaces save-to-profile
+- [x] T015 Fix `src/components/ui/sonner.tsx` — remove next-themes dependency (crashes without ThemeProvider)
+- [x] T016 Write `src/types/template.ts` — Template, TextZone, Decoration, TextCustomization
+- [x] T017 Write `src/data/templates.ts` — 15 templates with gradients, text, emoji decorations
+- [x] T018 Add `backendId` field to each template mapping to database UUID
+- [x] T019 Configure `vite.config.ts` — dev port 5174, /api proxy → localhost:8000
+- [x] T020 Configure `tailwind.config.ts` — purple/pink/orange theme, animations
+- [x] T021 Update `package.json` — remove @supabase/supabase-js, lovable-tagger
+- [x] T022 Create `Dockerfile` — node:22-alpine builder → nginx:alpine
+- [x] T023 Create `nginx.conf` — SPA fallback + /api proxy to backend:8000
+- [x] T024 Create `.dockerignore` — exclude node_modules, .git, dist
+- [x] T025 Update `index.html` — Russian lang, PicText Studio title
+- [x] T026 Update `docker-compose.yml` — frontend-v2 service on port 5174
+- [x] T027 Add `cairosvg>=2.7.0` to backend `pyproject.toml`
+- [x] T028 Add `libcairo2 libglib2.0-0` to backend `Dockerfile` apt-get
+- [x] T029 Rewrite `backend/services/render_service.py` — `_resolve_image_source()` handles data URI + SVG rasterisation
+- [x] T030 Download 10 Google Fonts (.ttf) via @fontsource npm → woff → ttf conversion
+- [x] T031 Update `backend/constants.py` FONT_REGISTRY — all 10 template fonts
+- [x] T032 Update `backend/schemas/__init__.py` TextZone — add default_text, label, shadow fields
+- [x] T033 Update `backend/seeds/seed_templates.py` — 15 gradient templates with text on SVG preview
+- [x] T034 Widen `templates.image_path` column from varchar(500) to TEXT
+- [x] T035 Archive old `frontend/` as `frontend_old/`, rename new to `frontend/`
+- [x] T036 Update `docker-compose.yml` — `frontend` = new code, `frontend_old` on port 5174
+- [x] T037 Delete obsolete specs: `openspec/specs/canvas-editor`, `openspec/specs/frontend-routing`
+- [x] T038 Verify: all 5 services healthy, render + history endpoints working

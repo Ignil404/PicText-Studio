@@ -1,22 +1,17 @@
-const STORAGE_KEY = 'session_id';
+/** Client-side session ID (UUID v4) persisted in localStorage. */
+const KEY = "session_id";
 
-/**
- * Returns a persistent session ID.
- * - On first visit: generates a UUID via crypto.randomUUID() and persists in localStorage.
- * - On returning visits: returns the existing value from localStorage.
- * - If localStorage is unavailable: generates a fresh UUID on each call (no persistence).
- */
 export function getSessionId(): string {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return stored;
-    }
-    const fresh = crypto.randomUUID();
-    localStorage.setItem(STORAGE_KEY, fresh);
-    return fresh;
-  } catch {
-    // localStorage unavailable (private mode, disabled, etc.)
-    return crypto.randomUUID();
+  let sid = localStorage.getItem(KEY);
+  if (!sid) {
+    sid = crypto.randomUUID();
+    localStorage.setItem(KEY, sid);
   }
+  return sid;
+}
+
+export function resetSessionId(): string {
+  const sid = crypto.randomUUID();
+  localStorage.setItem(KEY, sid);
+  return sid;
 }
