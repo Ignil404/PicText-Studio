@@ -17,6 +17,9 @@ class TextZone(BaseModel):
     color: str
     width: float | None = None
     height: float | None = None
+    default_text: str = ""
+    label: str = ""
+    shadow: bool = False
 
 
 # Template response matches frontend Template type
@@ -59,6 +62,7 @@ class TextBlock(BaseModel):
     color: str
     bold: bool = False
     italic: bool = False
+    text_align: str | None = None  # "left" | "center" | "right", default left
 
 
 # Full render request

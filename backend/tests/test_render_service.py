@@ -172,3 +172,21 @@ async def test_render_image_records_history(render_service, mock_repo, mock_hist
     call_args = mock_history_repo.create.await_args
     assert call_args.kwargs["session_id"] == "session-123"
     assert call_args.kwargs["template_id"] == tid
+
+
+# --- Coordinate conversion and anchor mapping tests ---
+
+def test_percent_to_pixel():
+    assert RenderService._percent_to_pixel(50, 600) == 300.0
+    assert RenderService._percent_to_pixel(30, 600) == 180.0
+    assert RenderService._percent_to_pixel(0, 800) == 0.0
+    assert RenderService._percent_to_pixel(100, 800) == 800.0
+    assert RenderService._percent_to_pixel(25.5, 400) == 102.0
+
+
+def test_text_align_to_anchor():
+    assert RenderService._text_align_to_anchor("left") == "lm"
+    assert RenderService._text_align_to_anchor("center") == "mm"
+    assert RenderService._text_align_to_anchor("right") == "rm"
+    assert RenderService._text_align_to_anchor(None) == "lm"
+    assert RenderService._text_align_to_anchor("invalid") == "lm"
