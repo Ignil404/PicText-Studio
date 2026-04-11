@@ -55,3 +55,7 @@
 - Серверный рендер: Pillow + cairosvg (SVG data URI в PNG), 10 Google Fonts добавлены
 - Страница истории, session UUID
 - Старый фронтенд сохранён как frontend_old
+
+## 2026-04-11
+
+- Спланирована система авторизации(на ветке feature/user-auth)
