@@ -1,4 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Lobster&family=Caveat:wght@400;700&family=Permanent+Marker&family=Satisfy&family=Comfortaa:wght@400;700&family=Rubik+Mono+One&family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap');
+/* Local fonts — loaded from /public/fonts/ via @font-face */
+@font-face {
+  font-family: 'Pacifico';
+  src: url('/fonts/Pacifico-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Lobster';
+  src: url('/fonts/Lobster-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Caveat';
+  src: url('/fonts/Caveat-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Permanent Marker';
+  src: url('/fonts/PermanentMarker-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satisfy';
+  src: url('/fonts/Satisfy-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Comfortaa';
+  src: url('/fonts/Comfortaa-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Rubik Mono One';
+  src: url('/fonts/RubikMonoOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/fonts/Fredoka-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Impact';
+  src: url('/fonts/Impact.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
 
 @tailwind base;
 @tailwind components;

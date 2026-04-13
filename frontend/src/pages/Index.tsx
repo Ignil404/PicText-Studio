@@ -1,23 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TemplateCard from '@/components/TemplateCard';
-import { templates } from '@/data/templates';
+import { templates as localTemplates } from '@/data/templates';
 import { TemplateCategory, CATEGORY_LABELS } from '@/types/template';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+import { fetchTemplates, mergeTemplates } from '@/api/client';
 
-const categories: (TemplateCategory | 'all')[] = ['all', 'motivation', 'demotivator', 'greeting', 'meme', 'quote'];
+const categoryOrder: (TemplateCategory | 'all')[] = [
+  'all',
+  'motivation',
+  'demotivator',
+  'greeting',
+  'meme',
+  'quote',
+  'reaction',
+];
 
 const Index = () => {
+  const [templates, setTemplates] = useState(localTemplates);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<TemplateCategory | 'all'>('all');
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    fetchTemplates()
+      .then((backend) => {
+        setTemplates(mergeTemplates(backend, localTemplates));
+      })
+      .catch((err) => {
+        // Backend unavailable — fall back to local templates
+        if (import.meta.env.DEV) {
+          console.warn('Backend templates unavailable, using local data', err);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = templates.filter((t) => {
     const matchesCategory = activeCategory === 'all' || t.category === activeCategory;
     const matchesSearch = !search || t.name.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const categories = categoryOrder.filter(
+    (cat) =>
+      cat === 'all' || templates.some((t) => t.category === cat),
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

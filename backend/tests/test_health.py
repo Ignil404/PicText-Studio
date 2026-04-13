@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import redis.asyncio as aioredis
 from httpx import AsyncClient
 
 
@@ -21,14 +22,15 @@ async def test_health_success(async_client: AsyncClient) -> None:
 
     mock_engine.begin.return_value = OkCtx()
 
-    # Mock Redis
+    # Mock Redis (async client via from_url)
     mock_redis_client = MagicMock()
-    mock_redis_client.ping.return_value = True
-    mock_redis_client.close.return_value = None
+    mock_redis_client.ping = AsyncMock(return_value=True)
+    mock_redis_client.aclose = AsyncMock()
 
-    with patch("routers.health.engine", mock_engine), patch("routers.health.redis") as mock_redis:
-        mock_redis.from_url.return_value = mock_redis_client
-
+    with (
+        patch("routers.health.engine", mock_engine),
+        patch.object(aioredis, "from_url", return_value=mock_redis_client),
+    ):
         response = await async_client.get("/api/health")
 
     assert response.status_code == 200

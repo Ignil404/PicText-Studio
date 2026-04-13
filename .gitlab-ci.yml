@@ -2,48 +2,177 @@ stages:
   - lint
   - type-check
   - test
+  - docker-build
   - frontend-build
 
 # ─── Lint stage ─────────────────────────────────────────────────────
 lint:backend:ruff:
   stage: lint
   image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - backend/pyproject.toml
+      prefix: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
   script:
-    - pip install --quiet ruff
+    - pip install --cache-dir .cache/pip --quiet ruff
     - cd backend && ruff check . && ruff format --check .
+  rules:
+    - changes:
+        - backend/**/*
+        - backend/pyproject.toml
+      when: on_success
+    - when: always
 
 # ─── Type-check stage ───────────────────────────────────────────────
 type-check:
   stage: type-check
   image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - backend/pyproject.toml
+      prefix: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends libcairo2 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+    - pip install --cache-dir .cache/pip --quiet --upgrade pip
   script:
-    - pip install --quiet --upgrade pip
-    - cd backend && pip install -e ".[dev]" && mypy .
+    - cd backend && pip install --cache-dir .cache/pip -e ".[dev]" && mypy .
+  rules:
+    - changes:
+        - backend/**/*
+        - backend/pyproject.toml
+      when: on_success
+    - when: always
 
 # ─── Test stage ─────────────────────────────────────────────────────
 test:
   stage: test
   image: python:3.12-slim
-  before_script:
-    - apt-get update && apt-get install -y --no-install-recommends libcairo2 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+  cache:
+    key:
+      files:
+        - backend/pyproject.toml
+      prefix: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
   services:
-    - postgres:16-alpine
+    - postgres:17-alpine
     - redis:7-alpine
   variables:
     POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
+    POSTGRES_PASSWORD: ${CI_JOB_ID}
     POSTGRES_DB: dl2026_test
-    DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/dl2026_test
+    DATABASE_URL: postgresql+asyncpg://postgres:${CI_JOB_ID}@postgres:5432/dl2026_test
     REDIS_URL: redis://redis:6379/0
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libcairo2 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+    - pip install --cache-dir .cache/pip --quiet --upgrade pip
   script:
-    - pip install --quiet --upgrade pip
-    - cd backend && pip install -e ".[dev]" && python -m pytest tests/ -v
+    - cd backend && pip install --cache-dir .cache/pip -e ".[dev]" && python -m pytest tests/ -v -m "not integration"
+  rules:
+    - changes:
+        - backend/**/*
+        - backend/pyproject.toml
+      when: on_success
+    - when: always
+
+# ─── Integration tests (real DB) ────────────────────────────────────
+test:integration:
+  stage: test
+  image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - backend/pyproject.toml
+      prefix: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
+  services:
+    - postgres:17-alpine
+    - redis:7-alpine
+  variables:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ${CI_JOB_ID}
+    POSTGRES_DB: dl2026_test
+    DATABASE_URL: postgresql+asyncpg://postgres:${CI_JOB_ID}@postgres:5432/dl2026_test
+    REDIS_URL: redis://redis:6379/0
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libcairo2 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+    - pip install --cache-dir .cache/pip --quiet --upgrade pip
+    - cd backend && pip install --cache-dir .cache/pip -e ".[dev]" && alembic upgrade head
+  script:
+    - cd backend && python -m pytest tests/test_integration.py -v -m integration
+  rules:
+    - changes:
+        - backend/**/*
+        - backend/pyproject.toml
+      when: on_success
+    - when: always
+
+# ─── Docker build smoke test ────────────────────────────────────────
+docker-build:backend:
+  stage: docker-build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build ./backend -t dl2026-backend:ci-test
+    - docker run --rm dl2026-backend:ci-test python --version
+    - docker run --rm dl2026-backend:ci-test python -c "import uvicorn; print(uvicorn.__version__)"
+  rules:
+    - changes:
+        - backend/**/*
+        - backend/Dockerfile
+      when: on_success
+    - when: manual
+      allow_failure: true
+  needs:
+    - job: test
+      optional: true
+    - job: test:integration
+      optional: true
+
+docker-build:frontend:
+  stage: docker-build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build ./frontend -t dl2026-frontend:ci-test
+    - docker run --rm dl2026-frontend:ci-test nginx -v
+  rules:
+    - changes:
+        - frontend/**/*
+        - frontend/Dockerfile
+      when: on_success
+    - when: manual
+      allow_failure: true
+  needs:
+    - job: frontend-build
+      optional: true
 
 # ─── Frontend-build stage ───────────────────────────────────────────
 frontend-build:
   stage: frontend-build
   image: node:22-alpine
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+      prefix: npm-${CI_COMMIT_REF_SLUG}
+    paths:
+      - frontend/.npm-cache
   script:
-    - cd frontend && npm install && npm run build
+    - cd frontend && npm install --cache .npm-cache && npm run build
+  rules:
+    - changes:
+        - frontend/**/*
+        - frontend/package.json
+        - frontend/package-lock.json
+      when: on_success
+    - when: always

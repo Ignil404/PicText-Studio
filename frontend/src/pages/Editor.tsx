@@ -1,53 +1,119 @@
-import { useState, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { templates } from '@/data/templates';
-import { TextCustomization } from '@/types/template';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { templates as localTemplates } from '@/data/templates';
+import { Template, TextCustomization } from '@/types/template';
 import { useSession } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import CanvasPreview from '@/components/CanvasPreview';
 import EditorPanel from '@/components/EditorPanel';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { fetchTemplateById, mergeTemplates } from '@/api/client';
 
 const Editor = () => {
   const { templateId } = useParams<{ templateId: string }>();
-  const template = templates.find((t) => t.id === templateId);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const navigate = useNavigate();
   const { sessionId } = useSession();
   const { toast } = useToast();
 
+  // Fetch template from backend, fall back to local data
+  const [template, setTemplate] = useState<Template | null>(null);
+  const [loading, setLoading] = useState(true);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTemplate() {
+      if (!templateId) {
+        setLoading(false);
+        return;
+      }
+
+      // Try backend first
+      try {
+        const backendData = await fetchTemplateById(templateId);
+        if (!cancelled) {
+          if (backendData) {
+            // Merge with local data for full enrichment
+            const merged = mergeTemplates([backendData], localTemplates);
+            setTemplate(merged[0] || null);
+          } else {
+            // Not in backend, try local only
+            const local = localTemplates.find(
+              (t) => t.id === templateId || t.backendId === templateId,
+            );
+            setTemplate(local || null);
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          // Backend unavailable, fall back to local
+          const local = localTemplates.find(
+            (t) => t.id === templateId || t.backendId === templateId,
+          );
+          setTemplate(local || null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadTemplate();
+    return () => {
+      cancelled = true;
+    };
+  }, [templateId]);
+
   // Pre-fill with default text from template zones
-  const [texts, setTexts] = useState<Record<string, string>>(() => {
-    if (!template) return {};
-    const d: Record<string, string> = {};
-    template.textZones.forEach((z) => (d[z.id] = z.defaultText));
-    return d;
-  });
+  const [texts, setTexts] = useState<Record<string, string>>(() => ({}));
   const [customizations, setCustomizations] = useState<Record<string, TextCustomization>>({});
   const [customBackground, setCustomBackground] = useState<string | undefined>();
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
 
+  // Refs for async callbacks to avoid stale closures
+  const templateRef = useRef<Template | null>(template);
+  const textsRef = useRef(texts);
+  useEffect(() => { templateRef.current = template; }, [template]);
+  useEffect(() => { textsRef.current = texts; }, [texts]);
+
+  // Initialize texts when template loads
+  useEffect(() => {
+    if (template) {
+      const d: Record<string, string> = {};
+      template.textZones.forEach((z) => (d[z.id] = z.defaultText));
+      setTexts(d);
+    }
+  }, [template]);
+
   const handleTextChange = useCallback((zoneId: string, text: string) => {
     setTexts((prev) => ({ ...prev, [zoneId]: text }));
   }, []);
 
-  const handleCustomizationChange = useCallback((zoneId: string, custom: TextCustomization) => {
-    setCustomizations((prev) => ({ ...prev, [zoneId]: custom }));
-  }, []);
+  const handleCustomizationChange = useCallback(
+    (zoneId: string, custom: TextCustomization) => {
+      setCustomizations((prev) => ({ ...prev, [zoneId]: custom }));
+    },
+    [],
+  );
 
-  const handleDownload = useCallback((format: 'png' | 'jpeg') => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-    const quality = format === 'jpeg' ? 0.92 : undefined;
-    const dataUrl = canvas.toDataURL(mimeType, quality);
-    const link = document.createElement('a');
-    link.download = `pictext-${template?.id || 'image'}.${format}`;
-    link.href = dataUrl;
-    link.click();
-  }, [template]);
+  const handleDownload = useCallback(
+    (format: 'png' | 'jpeg') => {
+      const canvas = canvasRef.current;
+      const tpl = templateRef.current;
+      if (!canvas) return;
+      const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+      const quality = format === 'jpeg' ? 0.92 : undefined;
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+      const link = document.createElement('a');
+      link.download = `pictext-${tpl?.id || 'image'}.${format}`;
+      link.href = dataUrl;
+      link.click();
+    },
+    [],
+  );
 
   const handleUploadBackground = useCallback((file: File) => {
     const reader = new FileReader();
@@ -58,12 +124,14 @@ const Editor = () => {
   }, []);
 
   const handleServerRender = useCallback(async () => {
-    if (!template) return;
+    const tpl = templateRef.current;
+    const txt = textsRef.current;
+    if (!tpl) return;
     setRendering(true);
     try {
-      const textBlocks = template.textZones.map((zone) => ({
+      const textBlocks = tpl.textZones.map((zone) => ({
         id: zone.id,
-        text: texts[zone.id] || zone.defaultText,
+        text: txt[zone.id] || zone.defaultText,
         x: zone.x,
         y: zone.y,
         font_family: zone.fontFamily,
@@ -78,7 +146,7 @@ const Editor = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          template_id: template.backendId ?? template.id,
+          template_id: tpl.backendId ?? tpl.id,
           text_blocks: textBlocks,
           session_id: sessionId,
           format: 'png',
@@ -93,16 +161,31 @@ const Editor = () => {
       const data = await res.json();
       const link = document.createElement('a');
       link.href = data.image_url;
-      link.download = `render-${template.id}.png`;
+      link.download = `render-${tpl.id}.png`;
       link.click();
 
-      toast({ title: '✅ Готово!', description: 'Картинка отрендерена на сервере и скачана' });
+      toast({
+        title: '✅ Готово!',
+        description: 'Картинка отрендерена на сервере и скачана',
+      });
     } catch (err: any) {
-      toast({ title: 'Ошибка рендера', description: err.message, variant: 'destructive' });
+      toast({
+        title: 'Ошибка рендера',
+        description: err.message,
+        variant: 'destructive',
+      });
     } finally {
       setRendering(false);
     }
-  }, [template, texts, sessionId, toast]);
+  }, [sessionId, toast]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!template) {
     return (

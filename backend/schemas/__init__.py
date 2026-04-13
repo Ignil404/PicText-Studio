@@ -46,11 +46,6 @@ class TemplateResponse(BaseModel):
         )
 
 
-# Category listing
-class CategoryList(BaseModel):
-    categories: list[str]
-
-
 # Blocks for render request
 class TextBlock(BaseModel):
     id: str
@@ -86,8 +81,3 @@ class HistoryEntry(BaseModel):
     text_blocks: list[TextBlock | dict[str, object]]
     image_url: str
     created_at: datetime
-
-
-# History list wrapper
-class HistoryList(BaseModel):
-    history: list[HistoryEntry]

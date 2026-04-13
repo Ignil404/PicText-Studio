@@ -13,6 +13,7 @@ venv/
 env/
 .mypy_cache/
 .ruff_cache/
+backend/rendered_images/
 
 # Node
 node_modules/

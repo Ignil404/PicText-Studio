@@ -12,7 +12,7 @@ router = APIRouter(tags=["history"])
 async def get_history(session_id: str) -> list[HistoryEntry]:
     history_repo = RenderHistoryRepository(async_session_factory)
     render_service = RenderService(
-        TemplateRepository(async_session_factory),  # not used by get_history
+        TemplateRepository(async_session_factory),
         history_repo,
     )
     return await render_service.get_history(session_id)

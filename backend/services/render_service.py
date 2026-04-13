@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import io
+import re
 import uuid
 from pathlib import Path
 
@@ -12,25 +13,43 @@ from repositories.render_history_repository import RenderHistoryRepository
 from repositories.template_repository import TemplateRepository
 from schemas import HistoryEntry, RenderRequest, RenderResponse, TextBlock
 
+# Patterns to strip from SVG before rendering (XSS prevention)
+_SVG_DANGEROUS = re.compile(
+    r"<\s*(script|object|embed|iframe|form|input|textarea)"
+    r"|on\w+\s*="  # event handlers: onclick=, onload=, etc.
+    r"|javascript\s*:"  # javascript: URIs
+    r"|<!ENTITY|SYSTEM|<!DOCTYPE[^>]*ENTITY",  # XXE
+    re.IGNORECASE | re.DOTALL,
+)
+
 
 class RenderError(Exception):
     """Raised when image rendering fails."""
 
 
 def _resolve_image_source(image_path: str) -> Image.Image:
-    """Open image from file path or data URI."""
+    """Open image from file path or data URI.
+
+    SECURITY: SVG data URIs are sanitised before rendering via cairosvg.
+    Dangerous elements (<script>, event handlers, javascript: URIs, XXE)
+    are stripped to prevent SVG-based XSS.
+    """
     if image_path.startswith("data:"):
         # Decode base64 data URI
         header, encoded = image_path.split(",", 1)
         raw = base64.b64decode(encoded)
 
-        # SVG → rasterise via cairosvg if available, else fail gracefully
+        # SVG → sanitise then rasterise via cairosvg
         if "svg" in header:
             try:
+                svg_text = raw.decode("utf-8", errors="replace")
+                # Strip dangerous patterns
+                svg_text = _SVG_DANGEROUS.sub("", svg_text)
+
                 import cairosvg  # type: ignore
 
                 png_bytes = cairosvg.svg2png(
-                    bytestring=raw,
+                    bytestring=svg_text.encode("utf-8"),
                     output_width=1080,
                     output_height=1080,
                 )
@@ -152,11 +171,18 @@ class RenderService:
 
     async def get_history(self, session_id: str) -> list[HistoryEntry]:
         records = await self._history_repo.get_by_session(session_id)
+        if not records:
+            return []
+
+        template_ids = {record.template_id for record in records}
+        templates = await self._template_repo.get_by_ids(template_ids)
+        name_map = {t.id: t.name for t in templates}
+
         return [
             HistoryEntry(
                 id=record.id,
                 template_id=record.template_id,
-                template_name="",  # not stored in history record
+                template_name=name_map.get(record.template_id, ""),
                 text_blocks=[
                     tb if isinstance(tb, TextBlock) else TextBlock.model_validate(tb)
                     for tb in record.text_blocks
