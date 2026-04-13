@@ -2,8 +2,8 @@ stages:
   - lint
   - type-check
   - test
-  - docker-build
   - frontend-build
+  - docker-build
 
 # ─── Lint stage ─────────────────────────────────────────────────────
 lint:backend:ruff:
