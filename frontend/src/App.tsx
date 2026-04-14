@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SessionProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import Editor from "./pages/Editor.tsx";
 import Auth from "./pages/Auth.tsx";
@@ -51,12 +51,12 @@ class ErrorBoundary extends React.Component<
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SessionProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <ErrorBoundary>
-          <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/editor/:templateId" element={<Editor />} />
@@ -66,10 +66,10 @@ const App = () => (
               <Route path="/shared/:shareId" element={<SharedImage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
-    </SessionProvider>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

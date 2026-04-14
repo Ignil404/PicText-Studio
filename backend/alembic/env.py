@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 from database import Base  # noqa: F401
-from models import RenderHistory, Template  # noqa: F401
+from models import RenderHistory, Template, User  # noqa: F401
 
 # `config` is injected by alembic at runtime via env.py invocation context
 config = context.config

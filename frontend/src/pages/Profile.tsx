@@ -1,28 +1,131 @@
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useSession } from '@/hooks/useAuth';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import {
+  LogOut,
+  Mail,
+  Calendar,
+  Image as ImageIcon,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Profile = () => {
-  const { sessionId } = useSession();
+  const { user, sessionId, isLoading, isAuthenticated, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="max-w-2xl mx-auto px-4 py-8">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-40" />
+              <Skeleton className="h-4 w-60 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="max-w-2xl mx-auto px-4 py-8">
+          <Card className="text-center">
+            <CardHeader>
+              <div className="text-4xl mb-2">👤</div>
+              <CardTitle>Гостевой режим</CardTitle>
+              <CardDescription>
+                Вы работаете без авторизации. Войдите для сохранения истории рендеров.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-muted rounded-lg p-3 font-mono text-sm">
+                Session: {sessionId}
+              </div>
+              <Button asChild className="rounded-full">
+                <Link to="/auth" state={{ redirectTo: '/' }}>
+                  Войти или зарегистрироваться
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="bg-card rounded-2xl border-2 border-border p-8 shadow-lg text-center">
-          <p className="text-4xl mb-4">👤</p>
-          <h2 className="text-2xl font-bold mb-2">Профиль</h2>
-          <p className="text-muted-foreground mb-4">
-            Функция профиля скоро будет доступна.
-          </p>
-          <p className="text-sm text-muted-foreground mb-6 font-mono">
-            Session ID: {sessionId}
-          </p>
-          <Link to="/">
-            <Button className="rounded-full">← Вернуться на главную</Button>
-          </Link>
-        </div>
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">👤</span>
+              Профиль
+            </CardTitle>
+            <CardDescription>Информация о вашем аккаунте</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <Mail className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{user.email}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Дата регистрации</p>
+                <p className="font-medium">
+                  {new Date(user.created_at).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Всего рендеров</p>
+                  <p className="font-medium">{user.render_count}</p>
+                </div>
+              </div>
+              <Badge variant="secondary">{user.render_count} шт.</Badge>
+            </div>
+
+            <Separator />
+
+            <Button
+              variant="outline"
+              className="w-full rounded-full gap-2"
+              onClick={logout}
+              disabled={false}
+            >
+              <LogOut className="h-4 w-4" />
+              Выйти
+            </Button>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

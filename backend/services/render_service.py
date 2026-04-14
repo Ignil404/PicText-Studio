@@ -164,13 +164,39 @@ class RenderService:
             session_id=request.session_id,
             template_id=request.template_id,
             text_blocks=text_blocks_data,
-            image_path=str(output_path),
+            image_path=image_url,
+            owner_id=request.owner_id,
         )
 
         return RenderResponse(image_url=image_url)
 
     async def get_history(self, session_id: str) -> list[HistoryEntry]:
         records = await self._history_repo.get_by_session(session_id)
+        if not records:
+            return []
+
+        template_ids = {record.template_id for record in records}
+        templates = await self._template_repo.get_by_ids(template_ids)
+        name_map = {t.id: t.name for t in templates}
+
+        return [
+            HistoryEntry(
+                id=record.id,
+                template_id=record.template_id,
+                template_name=name_map.get(record.template_id, ""),
+                text_blocks=[
+                    tb if isinstance(tb, TextBlock) else TextBlock.model_validate(tb)
+                    for tb in record.text_blocks
+                ],
+                image_url=record.image_path,
+                created_at=record.created_at,
+            )
+            for record in records
+        ]
+
+    async def get_history_by_user(self, user_id: uuid.UUID) -> list[HistoryEntry]:
+        """Get all renders owned by an authenticated user."""
+        records = await self._history_repo.get_by_owner(user_id)
         if not records:
             return []
 

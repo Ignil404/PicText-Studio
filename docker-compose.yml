@@ -39,6 +39,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379/0
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      SECRET_KEY: ${SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
     volumes:
       - ./backend:/app
       - rendered_images:/app/rendered_images
@@ -51,9 +54,10 @@ services:
     networks:
       - backend-net
       - frontend-net
+    user: "0:0"
     restart: unless-stopped
     command: >
-      sh -c "alembic upgrade head && python -m seeds.seed_templates --once && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+      sh -c "mkdir -p /app/rendered_images && chown -R appuser:appuser /app/rendered_images && su -s /bin/sh appuser -c 'alembic upgrade head && python -m seeds.seed_templates --once && uvicorn main:app --host 0.0.0.0 --port 8000 --reload'"
 
   frontend:
     build:

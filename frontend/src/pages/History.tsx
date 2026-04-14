@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
-import { useSession } from '@/hooks/useAuth';
+import { useAuth, api } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Download } from 'lucide-react';
@@ -16,24 +16,34 @@ interface HistoryEntry {
 }
 
 const History = () => {
-  const { sessionId, loading } = useSession();
+  const { sessionId, isLoading, isAuthenticated } = useAuth();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (loading || !sessionId) return;
-    fetch(`/api/history/${sessionId}`)
-      .then((r) => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then((data) => {
-        setEntries(data);
+    if (isLoading) return;
+
+    const params = new URLSearchParams();
+    if (!isAuthenticated && sessionId) {
+      params.set('session_id', sessionId);
+    }
+    const query = params.toString();
+    const url = '/api/history/me' + (query ? '?' + query : '');
+
+    api
+      .get(url)
+      .then((res) => {
+        setEntries(res.data);
         setFetching(false);
       })
       .catch((err) => {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'Failed to fetch history');
         setFetching(false);
       });
-  }, [sessionId, loading]);
+  }, [sessionId, isLoading, isAuthenticated]);
+
+  const displayId = isAuthenticated ? 'авторизован' : sessionId;
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +57,7 @@ const History = () => {
           </Link>
           <div>
             <h2 className="text-2xl font-bold">📜 История рендеров</h2>
-            <p className="text-sm text-muted-foreground font-mono">{sessionId}</p>
+            <p className="text-sm text-muted-foreground font-mono">{displayId}</p>
           </div>
         </div>
 

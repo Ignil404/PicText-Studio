@@ -4,10 +4,44 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# ─── Auth schemas ─────────────────────────────────────────────────────
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
 
 
-# Text zones (template layout hints)
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserInfo(BaseModel):
+    id: uuid.UUID
+    email: str
+    created_at: datetime
+    render_count: int = 0
+
+
+class MigrateSessionRequest(BaseModel):
+    session_id: str
+
+
+# ─── Existing schemas ─────────────────────────────────────────────────
 class TextZone(BaseModel):
     id: str
     x: float
@@ -62,10 +96,12 @@ class TextBlock(BaseModel):
 
 # Full render request
 class RenderRequest(BaseModel):
-    session_id: str
+    session_id: str | None = None
     template_id: uuid.UUID
     text_blocks: list[TextBlock]
     format: str = Field(pattern=r"^(png|jpeg)$", default="png")
+    # Set by the router for authenticated renders
+    owner_id: uuid.UUID | None = None
 
 
 # Render response

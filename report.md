@@ -77,3 +77,13 @@
 - Провёл ревью mdragun
 - Добавил интеграционные тесты (6 тестов PostgreSQL + Redis)
 - Удалил неиспользуемые shadcn/ui компоненты (~40 файлов)
+
+---
+
+## 2026-04-14
+
+- Реализована JWT авторизация (access + refresh токены)
+- Backend: User model, 6 auth endpoints, миграции Alembic
+- Frontend: AuthProvider, login/register формы, Profile страница
+- Guest -> user миграция при логине
+- 80 тестов

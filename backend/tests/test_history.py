@@ -7,6 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from dependencies import get_current_user_optional
+from main import app
+from models import User
+
 
 @pytest.mark.asyncio
 async def test_get_history_returns_renders_for_session(client: TestClient):
@@ -54,3 +58,40 @@ async def test_get_history_returns_empty_for_unknown_session(client: TestClient)
         assert response.status_code == 200
         data = response.json()
         assert data == []
+
+
+@pytest.mark.asyncio
+async def test_get_history_me_returns_user_history_when_authenticated(client: TestClient):
+    user = User(
+        id=uuid.uuid4(),
+        email="history@example.com",
+        hashed_password="hashed",
+    )
+
+    app.dependency_overrides[get_current_user_optional] = lambda: user
+    try:
+        with patch("routers.history.RenderService") as mock_service_cls:
+            mock_service = MagicMock()
+            mock_service.get_history_by_user = AsyncMock(return_value=[])
+            mock_service_cls.return_value = mock_service
+
+            response = client.get("/api/history/me")
+
+            assert response.status_code == 200
+            mock_service.get_history_by_user.assert_awaited_once_with(user.id)
+            mock_service.get_history.assert_not_called()
+    finally:
+        app.dependency_overrides.pop(get_current_user_optional, None)
+
+
+@pytest.mark.asyncio
+async def test_get_history_me_returns_guest_history_when_unauthenticated(client: TestClient):
+    with patch("routers.history.RenderService") as mock_service_cls:
+        mock_service = MagicMock()
+        mock_service.get_history = AsyncMock(return_value=[])
+        mock_service_cls.return_value = mock_service
+
+        response = client.get("/api/history/me", params={"session_id": "guest-session"})
+
+        assert response.status_code == 200
+        mock_service.get_history.assert_awaited_once_with("guest-session")

@@ -29,6 +29,9 @@ frontend/.vite/
 # AI tool configs (personal, not project-wide)
 .claude/
 .qwen/
+.codex/
+.opencode/
+.windsurf/
 
 # Environment
 .env

@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { templates as localTemplates } from '@/data/templates';
 import { Template, TextCustomization } from '@/types/template';
-import { useSession } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import CanvasPreview from '@/components/CanvasPreview';
 import EditorPanel from '@/components/EditorPanel';
@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchTemplateById, mergeTemplates } from '@/api/client';
+import { api } from '@/hooks/useAuth';
 
 const Editor = () => {
   const { templateId } = useParams<{ templateId: string }>();
-  const navigate = useNavigate();
-  const { sessionId } = useSession();
+  const { sessionId, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   // Fetch template from backend, fall back to local data
@@ -142,23 +142,17 @@ const Editor = () => {
         text_align: zone.align,
       }));
 
-      const res = await fetch('/api/render', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          template_id: tpl.backendId ?? tpl.id,
-          text_blocks: textBlocks,
-          session_id: sessionId,
-          format: 'png',
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
-        throw new Error(error.detail ?? `Render failed: ${res.status}`);
+      const body: Record<string, unknown> = {
+        template_id: tpl.backendId ?? tpl.id,
+        text_blocks: textBlocks,
+        format: 'png',
+      };
+      if (!isAuthenticated) {
+        body.session_id = sessionId;
       }
 
-      const data = await res.json();
+      const res = await api.post('/api/render', body);
+      const data = res.data;
       const link = document.createElement('a');
       link.href = data.image_url;
       link.download = `render-${tpl.id}.png`;
@@ -168,16 +162,16 @@ const Editor = () => {
         title: '✅ Готово!',
         description: 'Картинка отрендерена на сервере и скачана',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: 'Ошибка рендера',
-        description: err.message,
+        description: err instanceof Error ? err.message : 'Render failed',
         variant: 'destructive',
       });
     } finally {
       setRendering(false);
     }
-  }, [sessionId, toast]);
+  }, [sessionId, isAuthenticated, toast]);
 
   if (loading) {
     return (
