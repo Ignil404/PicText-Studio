@@ -87,3 +87,5 @@
 - Frontend: AuthProvider, login/register формы, Profile страница
 - Guest -> user миграция при логине
 - 80 тестов
+
+## 2026-04-15

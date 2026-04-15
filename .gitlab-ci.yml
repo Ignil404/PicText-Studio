@@ -115,6 +115,8 @@ test:integration:
     - when: always
 
 # ─── Docker build smoke test ────────────────────────────────────────
+# NOTE: Requires GitLab runner with `privileged = true` in config.toml.
+# If dind fails (no privileged), run locally or on a privileged runner.
 docker-build:backend:
   stage: docker-build
   image: docker:27
@@ -127,17 +129,8 @@ docker-build:backend:
     - docker run --rm dl2026-backend:ci-test python --version
     - docker run --rm dl2026-backend:ci-test python -c "import uvicorn; print(uvicorn.__version__)"
   rules:
-    - changes:
-        - backend/**/*
-        - backend/Dockerfile
-      when: on_success
     - when: manual
       allow_failure: true
-  needs:
-    - job: test
-      optional: true
-    - job: test:integration
-      optional: true
 
 docker-build:frontend:
   stage: docker-build
@@ -150,15 +143,8 @@ docker-build:frontend:
     - docker build ./frontend -t dl2026-frontend:ci-test
     - docker run --rm dl2026-frontend:ci-test nginx -v
   rules:
-    - changes:
-        - frontend/**/*
-        - frontend/Dockerfile
-      when: on_success
     - when: manual
       allow_failure: true
-  needs:
-    - job: frontend-build
-      optional: true
 
 # ─── Frontend-build stage ───────────────────────────────────────────
 frontend-build:
