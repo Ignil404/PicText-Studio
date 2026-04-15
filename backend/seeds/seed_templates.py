@@ -1,19 +1,22 @@
-"""Seed script: 15 beautiful templates with gradient backgrounds and text on preview."""
+"""Seed script: 15 beautiful templates with gradient backgrounds and text on preview.
+
+Uses SQLAlchemy async session (not raw asyncpg) for consistency with the rest of the app.
+"""
 
 import asyncio
 import base64
-import json
 import os
 import uuid
 
-import asyncpg
+from database import async_session_factory
+from logger import get_logger
+from models import Template
 
-DB_URL = (
-    os.getenv("DATABASE_URL_SEED")
-    or os.getenv("DATABASE_URL")
-    or "postgresql://app:secret@postgres:5432/app_db"
-)
-DB_URL = DB_URL.replace("postgresql+asyncpg://", "postgresql://")
+logger = get_logger(__name__)
+
+DB_URL = os.getenv("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required.")
 
 
 def _esc(s: str) -> str:
@@ -112,7 +115,6 @@ def make_template(
     text_zones: list[dict],
 ) -> dict:
     """Build a template dict — text_zones rendered on preview image."""
-    # Preview zones: slightly adjusted Y to be visually centered in SVG
     preview_zones = []
     for z in text_zones:
         preview_zones.append(z)
@@ -202,7 +204,7 @@ TEMPLATES = [
             tz("top", 540, 80, "Impact", 52,
                "#ffffff", "КОГДА ВСЁ ИДЁТ ПО ПЛАНУ", shadow=True),
             tz("bottom", 540, 1000, "Impact", 48,
-               "#ffffff", "И ЭТО ПЛАН БЫЛ «НЕ ПЛАНИРОВАТЬ»", shadow=True),
+               "#ffffff", "А САМ ОТКРЫЛ НЕТФЛИКС", shadow=True),
         ]),
 
     # === QUOTES ===
@@ -243,32 +245,46 @@ TEMPLATES = [
 # fmt: on
 
 
-async def seed() -> None:
-    conn = await asyncpg.connect(DB_URL)
-    try:
-        await conn.execute("DELETE FROM render_history")
-        await conn.execute("DELETE FROM templates")
+async def seed(*, force: bool = True) -> None:
+    """Seed templates into the database.
 
+    Args:
+        force: If False, skip seeding when templates already exist (idempotent mode).
+    """
+    async with async_session_factory() as session:
+        # Check existing count for idempotent mode
+        if not force:
+            result = await session.execute(Template.__table__.select())
+            if result.scalar() is not None:  # any row exists
+                logger.info("Templates already seeded, skipping")
+                return
+
+        # Clear existing data and re-seed
+        await session.execute(Template.__table__.delete())
+        await session.commit()
+
+        # Insert templates
         for t in TEMPLATES:
-            await conn.execute(
-                """
-                INSERT INTO templates
-                    (id, name, category, image_path, width, height, text_zones, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-                """,
-                t["id"],
-                t["name"],
-                t["category"],
-                t["image_path"],
-                t["width"],
-                t["height"],
-                json.dumps(t["text_zones"]),
+            template = Template(
+                id=t["id"],
+                name=t["name"],
+                category=t["category"],
+                image_path=t["image_path"],
+                width=t["width"],
+                height=t["height"],
+                text_zones=t["text_zones"],
             )
+            session.add(template)
 
-        print(f"✅ Seeded {len(TEMPLATES)} templates")
-    finally:
-        await conn.close()
+        await session.commit()
+        logger.info(f"Seeded {len(TEMPLATES)} templates")
 
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Seed template database")
+    parser.add_argument("--once", action="store_true", help="Skip if templates already exist")
+    args = parser.parse_args()
+
+    asyncio.run(seed(force=not args.once))

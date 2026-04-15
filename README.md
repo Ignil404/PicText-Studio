@@ -14,8 +14,21 @@
 
 ```bash
 cp .env.example .env
+# Generate SECRET_KEY: python -c "import secrets; print(secrets.token_urlsafe(32))"
 docker compose up
 ```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `POSTGRES_USER` | PostgreSQL username | — |
+| `POSTGRES_PASSWORD` | PostgreSQL password | — |
+| `POSTGRES_DB` | Database name | — |
+| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins | `http://localhost:5173` |
+| `SECRET_KEY` | JWT signing secret | auto-generated if empty |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token TTL | `15` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token TTL | `7` |
 
 - **Новый фронтенд**: http://localhost:5173
 - **Старый фронтенд**: http://localhost:5174 (для сравнения)
@@ -27,8 +40,10 @@ docker compose up
 - 🎨 Галерея из 15 шаблонов с градиентными фонами и эмодзи-декорациями
 - ✏️ Canvas-редактор: текст редактируется в реальном времени на превью
 - 🖨️ Серверный рендер через Pillow + cairosvg (SVG data URI → PNG)
-- 📜 История рендеров по session ID (localStorage, без логина)
-- 🔐 Страницы авторизации и профиля — заглушки (будут реализованы позже)
+- 📜 История рендеров: гостевая (по session ID) + пользовательская (по JWT)
+- 🔐 Регистрация/вход через email + пароль, JWT access + refresh tokens
+- 👤 Профиль с информацией об аккаунте и счётчиком рендеров
+- 🔄 Guest → user migration: гостевые рендеры мигрируют при входе
 
 ## Development Commands
 

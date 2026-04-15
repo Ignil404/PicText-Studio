@@ -29,3 +29,9 @@ class TemplateRepository:
             stmt = select(Template.category).distinct().order_by(Template.category.asc())
             result = await session.execute(stmt)
             return list(result.scalars().all())
+
+    async def get_by_ids(self, template_ids: set[uuid.UUID]) -> list[Template]:
+        async with self._session_factory() as session:
+            stmt = select(Template).where(Template.id.in_(template_ids))
+            result = await session.execute(stmt)
+            return list(result.scalars().all())

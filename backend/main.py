@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import FastAPI
 
 from app import create_app
+from routers.auth import router as auth_router
 from routers.health import router as health_router
 from routers.history import router as history_router
 from routers.render import router as render_router
@@ -14,6 +15,7 @@ app.include_router(health_router, prefix="/api")
 app.include_router(templates_router)
 app.include_router(render_router)
 app.include_router(history_router)
+app.include_router(auth_router)
 
 
 @app.get("/")

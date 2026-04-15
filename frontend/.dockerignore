@@ -4,3 +4,4 @@ dist
 *.md
 .lovable
 supabase
+public/fonts

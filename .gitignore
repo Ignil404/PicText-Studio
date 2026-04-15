@@ -13,6 +13,7 @@ venv/
 env/
 .mypy_cache/
 .ruff_cache/
+backend/rendered_images/
 
 # Node
 node_modules/
@@ -28,6 +29,9 @@ frontend/.vite/
 # AI tool configs (personal, not project-wide)
 .claude/
 .qwen/
+.codex/
+.opencode/
+.windsurf/
 
 # Environment
 .env

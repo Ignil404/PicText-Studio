@@ -1,7 +1,7 @@
 """create templates table
 
 Revision ID: 002
-Revises: 001
+Revises:
 Create Date: 2026-04-06
 """
 
@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from alembic import op
 
 revision = "002"
-down_revision = "001"
+down_revision = None
 branch_labels = None
 depends_on = None
 

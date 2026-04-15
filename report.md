@@ -1,9 +1,11 @@
-## 2026.04.03: 
+## 2026-04-03 
+
 - Создание subgroup, перенос проекта с github
 
 ---
 
 ## 2026-04-04
+
 - Создан CONSTITUTION.md и CLAUDE.md
 - Спланирован скаффолд проекта через OpenSpec
 - Начат backend scaffold: FastAPI, SQLAlchemy async, structlog, тесты
@@ -55,3 +57,35 @@
 - Серверный рендер: Pillow + cairosvg (SVG data URI в PNG), 10 Google Fonts добавлены
 - Страница истории, session UUID
 - Старый фронтенд сохранён как frontend_old
+
+---
+
+## 2026-04-11
+
+- Спланирована система авторизации(на ветке feature/user-auth)
+
+---
+
+## 2026-04-12
+
+- Провёл ревью AGordeenko
+
+---
+
+## 2026-04-13
+
+- Провёл ревью mdragun
+- Добавил интеграционные тесты (6 тестов PostgreSQL + Redis)
+- Удалил неиспользуемые shadcn/ui компоненты (~40 файлов)
+
+---
+
+## 2026-04-14
+
+- Реализована JWT авторизация (access + refresh токены)
+- Backend: User model, 6 auth endpoints, миграции Alembic
+- Frontend: AuthProvider, login/register формы, Profile страница
+- Guest -> user миграция при логине
+- 80 тестов
+
+## 2026-04-15

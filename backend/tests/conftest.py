@@ -5,8 +5,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import delete
 
+from database import async_session_factory
 from main import app
+from models import RenderHistory, User
 
 
 @pytest.fixture
@@ -19,6 +22,26 @@ def test_app() -> FastAPI:
 def client(test_app: FastAPI) -> TestClient:
     """Synchronous test client using starlette TestClient."""
     return TestClient(test_app)
+
+
+@pytest.fixture
+async def reset_test_data() -> AsyncGenerator[None, None]:
+    """Keep DB-backed tests isolated when they use the shared application database.
+
+    Apply this fixture explicitly to tests that need a clean database state.
+    Do NOT use autouse — pure unit tests with mocks should not require a DB connection.
+    """
+    async with async_session_factory() as session:
+        await session.execute(delete(RenderHistory))
+        await session.execute(delete(User))
+        await session.commit()
+
+    yield
+
+    async with async_session_factory() as session:
+        await session.execute(delete(RenderHistory))
+        await session.execute(delete(User))
+        await session.commit()
 
 
 @pytest.fixture
