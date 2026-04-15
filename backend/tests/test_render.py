@@ -10,6 +10,8 @@ from dependencies import get_current_user_optional
 from main import app
 from models import User
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_render_valid_request_returns_200(client: TestClient):

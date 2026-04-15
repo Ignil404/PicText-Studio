@@ -1,13 +1,20 @@
-"""Tests for auth router: registration, login, refresh, logout, /me, migration."""
+"""Tests for auth router: registration, login, refresh, logout, /me, migration.
 
+These tests require a real database connection and are marked as integration tests.
+Run with: pytest -m integration (or deselect with: pytest -m "not integration")
+"""
+
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def valid_user_data():
-    return {"email": "test@example.com", "password": "securepass123"}
+    return {"email": f"test-{uuid.uuid4().hex[:8]}@example.com", "password": "securepass123"}
 
 
 class TestRegister:

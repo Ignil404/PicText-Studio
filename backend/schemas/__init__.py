@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 # ─── Auth schemas ─────────────────────────────────────────────────────
 
+
 class RegisterRequest(BaseModel):
     email: str
     password: str
