@@ -49,3 +49,15 @@ alembic.ini.bak
 
 # Font download script (fonts themselves are tracked)
 download_fonts.sh
+
+# package (root)
+package-lock.json
+package.json
+
+# frontend
+frontend/package-lock.json
+frontend/package.json
+
+# frontend_old
+frontend_old/package-lock.json
+frontend_old/package.json
