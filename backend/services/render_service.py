@@ -46,7 +46,7 @@ def _resolve_image_source(image_path: str) -> Image.Image:
                 # Strip dangerous patterns
                 svg_text = _SVG_DANGEROUS.sub("", svg_text)
 
-                import cairosvg  # type: ignore
+                import cairosvg
 
                 png_bytes = cairosvg.svg2png(
                     bytestring=svg_text.encode("utf-8"),

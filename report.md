@@ -89,3 +89,15 @@
 - 80 тестов
 
 ## 2026-04-15
+
+- Заархивирован change `user-auth` — JWT авторизация завершена
+- Смержена ветка feature/user-auth в develop
+- Спланирована админ-панель
+
+## 2026-04-16
+
+- Админ-панель `/admin` — ролевая модель (JWT), управление шаблонами, пользователями, статистика
+- Backend: миграции `role` + `is_blocked`, `require_admin()`, 12 admin endpoints
+- Frontend: AdminLayout, AdminGuard, Dashboard, Templates CRUD, Users, Stats (4 графика)
+- Seed скрипт `create_admin.py` (admin@example.com / admin123)
+- 39+ тестов для admin функционала, обновлён README.md

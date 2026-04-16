@@ -42,7 +42,7 @@ const TemplateCard = ({ template }: TemplateCardProps) => {
       if (dec.type === 'emoji') {
         ctx.save();
         ctx.globalAlpha = dec.opacity ?? 1;
-        ctx.font = `${dec.size * scale}px serif`;
+        ctx.font = `${dec.size * scale}px "Inter", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         if (dec.rotation) {
@@ -62,7 +62,7 @@ const TemplateCard = ({ template }: TemplateCardProps) => {
       const fontSize = zone.fontSize * scale;
       const weight = zone.bold ? '700' : '400';
       const style = zone.italic ? 'italic ' : '';
-      ctx.font = `${style}${weight} ${fontSize}px ${zone.fontFamily}, sans-serif`;
+      ctx.font = `${style}${weight} ${fontSize}px "${zone.fontFamily}", sans-serif`;
       ctx.fillStyle = zone.color;
       ctx.textAlign = zone.align;
       ctx.textBaseline = 'middle';

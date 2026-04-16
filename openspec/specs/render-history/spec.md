@@ -1,16 +1,21 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Session History Retrieval
-The system SHALL return the render history for a given session ID.
+### Requirement: History Retrieval
+The system SHALL return the render history for the authenticated user or the current guest session.
 
-#### Scenario: Non-empty session
-- **WHEN** client sends `GET /api/history/{session_id}`
-- **THEN** the system returns `200 OK` with a JSON array of render records
+#### Scenario: Authenticated user history
+- **WHEN** a client sends `GET /api/history/me` with a valid JWT access token
+- **THEN** the system returns `200 OK` with a JSON array of render records owned by that user
 - **AND** each record contains `id`, `template_id`, `template_name`, `text_blocks`, `image_url`, `created_at`
 - **AND** records are ordered by `created_at` descending
 
-#### Scenario: Empty session
-- **WHEN** client sends `GET /api/history/{session_id}` with a session that has no renders
+#### Scenario: Guest user history
+- **WHEN** a client sends `GET /api/history/me` without a JWT but with a `session_id` cookie or query parameter
+- **THEN** the system returns `200 OK` with render records where `session_id` matches AND `owner_id IS NULL`
+- **AND** records are ordered by `created_at` descending
+
+#### Scenario: Empty history
+- **WHEN** the user or session has no renders
 - **THEN** the system returns `200 OK` with an empty JSON array `[]`
 
 ### Requirement: History Data Model
@@ -19,58 +24,28 @@ The system SHALL store render history with the following attributes:
 | Column       | Type     | Constraints                     |
 |--------------|----------|---------------------------------|
 | id           | UUID     | PK, default uuid4()             |
-| session_id   | String   | NOT NULL, indexed               |
-| template_id  | UUID     | NOT NULL, FK -> templates.id    |
+| session_id   | String   | NULLABLE, indexed               |
+| owner_id     | UUID     | NULLABLE, FK → users.id         |
+| template_id  | UUID     | NOT NULL, FK → templates.id     |
 | text_blocks  | JSONB    | NOT NULL                        |
-| image_path   | String   | NOT NULL                        |
+| image_path   | Text     | NOT NULL                        |
 | created_at   | DateTime | NOT NULL, default now           |
+
+When `owner_id` is set, the render belongs to an authenticated user. When `owner_id` is NULL, the render belongs to a guest identified by `session_id`.
 
 Text blocks JSONB structure matches the POST /api/render request text_blocks format.
 
 ### Requirement: Session History Creation
 The system SHALL automatically create a history record for each successful render.
 
-#### Scenario: Render creates history
-- **WHEN** `POST /api/render` completes successfully
-- **THEN** a new history record is inserted with `session_id`, `template_id`, `text_blocks`, and `image_path`
-- **AND** the record is returned in subsequent `GET /api/history/{session_id}` responses
+#### Scenario: Guest render creates history
+- **WHEN** `POST /api/render` completes successfully for a guest (no JWT)
+- **THEN** a new history record is inserted with `session_id` from the request body
+- **AND** `owner_id` is set to NULL
+- **AND** the record is returned in subsequent `GET /api/history/me` responses
 
-### Requirement: History page route
-The system SHALL provide a `/history` route that displays the render history for the current session.
-
-#### Scenario: Navigate to history page
-- **WHEN** the user navigates to `/history`
-- **THEN** the system renders the `HistoryPage` component with the current session's render history
-
-#### Scenario: No session history
-- **WHEN** the current session has no previous renders
-- **THEN** the system displays a "No renders yet" message with a link back to the gallery
-
-### Requirement: History data fetching
-The system SHALL fetch history entries from `GET /api/history/{session_id}` when the history page loads.
-
-#### Scenario: Successful history fetch
-- **WHEN** the history page loads and the API returns entries
-- **THEN** each entry displays a thumbnail image, template name, and timestamp
-
-#### Scenario: History fetch failure
-- **WHEN** the history page loads but the API request fails
-- **THEN** the system displays an error message with a retry button
-
-### Requirement: History entry display
-The system SHALL render each history entry as a card containing a thumbnail (from `image_url`), template name, creation timestamp, and an action to re-open the template in the editor.
-
-#### Scenario: View history entry
-- **WHEN** a history entry is displayed
-- **THEN** the card shows the rendered image thumbnail, the template name, and a "Created at" timestamp in a human-readable format
-
-#### Scenario: Re-edit from history
-- **WHEN** the user clicks on a history entry
-- **THEN** the system navigates to `/editor/{template_id}` with the template ID from that entry
-
-### Requirement: History loading state
-The system SHALL display a loading indicator while history entries are being fetched.
-
-#### Scenario: Loading history
-- **WHEN** the history request is in-flight
-- **THEN** the system displays a loading spinner or skeleton
+#### Scenario: Authenticated render creates history
+- **WHEN** `POST /api/render` completes successfully for an authenticated user (valid JWT)
+- **THEN** a new history record is inserted with `owner_id` from the JWT `sub` claim
+- **AND** `session_id` is recorded if provided, otherwise NULL
+- **AND** the record is returned in subsequent `GET /api/history/me` responses

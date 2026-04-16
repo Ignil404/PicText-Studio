@@ -54,7 +54,7 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, canv
         if (dec.type === 'emoji') {
           ctx.save();
           ctx.globalAlpha = dec.opacity ?? 1;
-          ctx.font = `${dec.size}px serif`;
+          ctx.font = `${dec.size}px "Inter", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           if (dec.rotation) {
@@ -81,7 +81,7 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, canv
         ctx.save();
         const weight = zone.bold ? '700' : '400';
         const style = zone.italic ? 'italic ' : '';
-        ctx.font = `${style}${weight} ${fontSize}px ${fontFamily}, sans-serif`;
+        ctx.font = `${style}${weight} ${fontSize}px "${fontFamily}", sans-serif`;
         ctx.fillStyle = color;
         ctx.textAlign = zone.align;
         ctx.textBaseline = 'middle';

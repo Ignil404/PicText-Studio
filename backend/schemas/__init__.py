@@ -29,11 +29,13 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    role: str = "user"
 
 
 class UserInfo(BaseModel):
     id: uuid.UUID
     email: str
+    role: str = "user"
     created_at: datetime
     render_count: int = 0
 
@@ -66,10 +68,14 @@ class TemplateResponse(BaseModel):
     width: int
     height: int
     textZones: list[TextZone]
+    is_active: bool = True
 
     @classmethod
     def from_model(cls, template: Any) -> TemplateResponse:
         text_zones = template.text_zones if isinstance(template.text_zones, list) else []
+        is_active = getattr(template, "is_active", None)
+        if is_active is None:
+            is_active = True
         return cls(
             id=template.id,
             name=template.name,
@@ -78,6 +84,7 @@ class TemplateResponse(BaseModel):
             width=template.width,
             height=template.height,
             textZones=[TextZone(**z) if isinstance(z, dict) else z for z in text_zones],
+            is_active=is_active,
         )
 
 

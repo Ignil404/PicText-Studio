@@ -35,10 +35,10 @@ def _create_token(data: dict[str, Any], expires_delta: timedelta) -> str:
     return cast(str, jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
 
 
-def create_access_token(user_id: uuid.UUID) -> str:
+def create_access_token(user_id: uuid.UUID, role: str = "user") -> str:
     """Create a short-lived JWT access token."""
     return _create_token(
-        {"sub": str(user_id), "type": "access"},
+        {"sub": str(user_id), "type": "access", "role": role},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
