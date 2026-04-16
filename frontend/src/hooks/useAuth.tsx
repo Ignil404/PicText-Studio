@@ -14,6 +14,7 @@ import { getSessionId } from '@/lib/session';
 export interface User {
   id: string;
   email: string;
+  role: string;
   created_at: string;
   render_count: number;
 }
@@ -129,8 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       { email, password },
       { withCredentials: true },
     );
-    const { access_token } = res.data;
+    const { access_token, role } = res.data;
     localStorage.setItem('access_token', access_token);
+    localStorage.setItem('user_role', role || 'user');
     setAccessToken(access_token);
     await fetchCurrentUser();
 
@@ -162,6 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Server unreachable — clear local state anyway
     }
     localStorage.removeItem('access_token');
+    localStorage.removeItem('user_role');
     setAccessToken(null);
     setUser(null);
     window.location.assign('/');

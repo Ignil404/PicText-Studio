@@ -59,6 +59,12 @@ async def get_current_user(
             detail="User not found",
         )
 
+    if user.is_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been blocked",
+        )
+
     return user
 
 
@@ -82,4 +88,35 @@ async def get_current_user_optional(
 
     async with async_session_factory() as session:
         result = await session.execute(select(User).where(User.id == user_id))
-        return result.scalar_one_or_none()
+        user = result.scalar_one_or_none()
+
+    if user and user.is_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been blocked",
+        )
+
+    return user
+
+
+async def require_admin(
+    credentials: HTTPAuthorizationCredentials | None = security_credentials,
+) -> User:
+    """Require admin role for access.
+
+    Use in admin endpoints:
+        dependencies=[Depends(require_admin)]
+
+    Raises:
+        401 if token is missing, invalid, or expired.
+        403 if user is not an admin.
+    """
+    user = await get_current_user(credentials)
+
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    return user

@@ -30,6 +30,13 @@ class UserRepository:
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
+    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
+        """Find a user by ID."""
+        async with self._session_factory() as session:
+            stmt = select(User).where(User.id == user_id)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
+
     async def count_renders_by_user(self, user_id: uuid.UUID) -> int:
         """Count total renders owned by a user."""
         async with self._session_factory() as session:

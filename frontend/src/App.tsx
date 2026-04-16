@@ -12,6 +12,11 @@ import Profile from "./pages/Profile.tsx";
 import History from "./pages/History.tsx";
 import SharedImage from "./pages/SharedImage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminLayout from "./pages/admin/AdminLayout.tsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+import AdminTemplates from "./pages/admin/AdminTemplates.tsx";
+import AdminUsers from "./pages/admin/AdminUsers.tsx";
+import AdminStats from "./pages/admin/AdminStats.tsx";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +69,13 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/shared/:shareId" element={<SharedImage />} />
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="templates" element={<AdminTemplates />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="stats" element={<AdminStats />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ErrorBoundary>

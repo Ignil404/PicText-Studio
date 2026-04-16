@@ -85,11 +85,11 @@ async def login(body: LoginRequest, response: Response) -> TokenResponse:
             detail="Incorrect email or password",
         )
 
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(user.id, role=user.role)
     refresh_token = create_refresh_token(user.id)
     _set_refresh_cookie(response, refresh_token)
 
-    return TokenResponse(access_token=access_token)
+    return TokenResponse(access_token=access_token, role=user.role)
 
 
 @router.post("/refresh")
@@ -118,11 +118,18 @@ async def refresh(
         ) from exc
 
     user_id = uuid.UUID(payload["sub"])
-    new_access_token = create_access_token(user_id)
+    repo = UserRepository(async_session_factory)
+    user = await repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    new_access_token = create_access_token(user_id, role=user.role)
     new_refresh_token = create_refresh_token(user_id)
 
     _set_refresh_cookie(response, new_refresh_token)
-    return TokenResponse(access_token=new_access_token)
+    return TokenResponse(access_token=new_access_token, role=user.role)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -139,6 +146,7 @@ async def get_me(user: User = current_user_dependency) -> UserInfo:
     return UserInfo(
         id=user.id,
         email=user.email,
+        role=user.role,
         created_at=user.created_at,
         render_count=render_count,
     )

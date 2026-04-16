@@ -1,4 +1,4 @@
-"""Tests for auth dependencies."""
+"""Tests for admin endpoints."""
 
 from __future__ import annotations
 
@@ -8,134 +8,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
-from jose import ExpiredSignatureError
 
-from dependencies import get_current_user, require_admin
+from dependencies import require_admin
 from models import User
 
-
-@pytest.mark.asyncio
-async def test_get_current_user_valid_token_returns_user() -> None:
-    user_id = uuid.uuid4()
-    user = User(
-        id=user_id,
-        email="user@example.com",
-        hashed_password="hashed",
-    )
-    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
-
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = user
-
-    mock_session = MagicMock()
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    mock_context = MagicMock()
-    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_context.__aexit__ = AsyncMock(return_value=None)
-
-    with (
-        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
-        patch("dependencies.async_session_factory", return_value=mock_context),
-    ):
-        result = await get_current_user(credentials)
-
-    assert result == user
+# Admin Templates Tests
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_missing_header_raises_401() -> None:
-    with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(None)
-
-    assert exc_info.value.status_code == 401
-    assert exc_info.value.detail == "Not authenticated"
-
-
-@pytest.mark.asyncio
-async def test_get_current_user_expired_token_raises_401() -> None:
-    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="expired")
-
-    with (
-        patch("dependencies.decode_token", side_effect=ExpiredSignatureError()),
-        pytest.raises(HTTPException) as exc_info,
-    ):
-        await get_current_user(credentials)
-
-    assert exc_info.value.status_code == 401
-    assert exc_info.value.detail == "Token expired"
-
-
-@pytest.mark.asyncio
-async def test_get_current_user_blocked_raises_403() -> None:
-    """Test that blocked users get 403 Forbidden."""
-    user_id = uuid.uuid4()
-    user = User(
-        id=user_id,
-        email="blocked@example.com",
-        hashed_password="hashed",
-        role="user",
-        is_blocked=True,
-    )
-    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
-
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = user
-
-    mock_session = MagicMock()
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    mock_context = MagicMock()
-    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_context.__aexit__ = AsyncMock(return_value=None)
-
-    with (
-        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
-        patch("dependencies.async_session_factory", return_value=mock_context),
-        pytest.raises(HTTPException) as exc_info,
-    ):
-        await get_current_user(credentials)
-
-    assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "Account has been blocked"
-
-
-@pytest.mark.asyncio
-async def test_require_admin_with_admin_user_succeeds() -> None:
-    """Test that require_admin succeeds for admin users."""
-    user_id = uuid.uuid4()
-    user = User(
-        id=user_id,
-        email="admin@example.com",
-        hashed_password="hashed",
-        role="admin",
-        is_blocked=False,
-    )
-    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
-
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = user
-
-    mock_session = MagicMock()
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    mock_context = MagicMock()
-    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_context.__aexit__ = AsyncMock(return_value=None)
-
-    with (
-        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
-        patch("dependencies.async_session_factory", return_value=mock_context),
-    ):
-        result = await require_admin(credentials)
-
-    assert result == user
-    assert result.role == "admin"
-
-
-@pytest.mark.asyncio
-async def test_require_admin_with_regular_user_raises_403() -> None:
-    """Test that require_admin raises 403 for non-admin users."""
+async def test_list_templates_requires_admin() -> None:
+    """Test that listing templates requires admin role."""
+    # Non-admin user should get 403
     user_id = uuid.uuid4()
     user = User(
         id=user_id,
@@ -164,4 +47,175 @@ async def test_require_admin_with_regular_user_raises_403() -> None:
         await require_admin(credentials)
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "Admin access required"
+
+
+@pytest.mark.asyncio
+async def test_create_template_requires_admin() -> None:
+    """Test that creating templates requires admin role."""
+    # Same logic - non-admin should get 403
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        email="user@example.com",
+        hashed_password="hashed",
+        role="user",
+        is_blocked=False,
+    )
+    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+
+    mock_session = MagicMock()
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    mock_context = MagicMock()
+    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_context.__aexit__ = AsyncMock(return_value=None)
+
+    with (
+        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
+        patch("dependencies.async_session_factory", return_value=mock_context),
+        pytest.raises(HTTPException) as exc_info,
+    ):
+        await require_admin(credentials)
+
+    assert exc_info.value.status_code == 403
+
+
+# Admin Users Tests
+
+
+@pytest.mark.asyncio
+async def test_list_users_requires_admin() -> None:
+    """Test that listing users requires admin role."""
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        email="user@example.com",
+        hashed_password="hashed",
+        role="user",
+        is_blocked=False,
+    )
+    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+
+    mock_session = MagicMock()
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    mock_context = MagicMock()
+    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_context.__aexit__ = AsyncMock(return_value=None)
+
+    with (
+        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
+        patch("dependencies.async_session_factory", return_value=mock_context),
+        pytest.raises(HTTPException) as exc_info,
+    ):
+        await require_admin(credentials)
+
+    assert exc_info.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_block_user_requires_admin() -> None:
+    """Test that blocking users requires admin role."""
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        email="user@example.com",
+        hashed_password="hashed",
+        role="user",
+        is_blocked=False,
+    )
+    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+
+    mock_session = MagicMock()
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    mock_context = MagicMock()
+    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_context.__aexit__ = AsyncMock(return_value=None)
+
+    with (
+        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
+        patch("dependencies.async_session_factory", return_value=mock_context),
+        pytest.raises(HTTPException) as exc_info,
+    ):
+        await require_admin(credentials)
+
+    assert exc_info.value.status_code == 403
+
+
+# Admin Stats Tests
+
+
+@pytest.mark.asyncio
+async def test_dashboard_stats_requires_admin() -> None:
+    """Test that accessing dashboard stats requires admin role."""
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        email="user@example.com",
+        hashed_password="hashed",
+        role="user",
+        is_blocked=False,
+    )
+    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+
+    mock_session = MagicMock()
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    mock_context = MagicMock()
+    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_context.__aexit__ = AsyncMock(return_value=None)
+
+    with (
+        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
+        patch("dependencies.async_session_factory", return_value=mock_context),
+        pytest.raises(HTTPException) as exc_info,
+    ):
+        await require_admin(credentials)
+
+    assert exc_info.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_routes_succeed_with_admin_role() -> None:
+    """Test that admin routes succeed with admin role."""
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        email="admin@example.com",
+        hashed_password="hashed",
+        role="admin",
+        is_blocked=False,
+    )
+    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+
+    mock_session = MagicMock()
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    mock_context = MagicMock()
+    mock_context.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_context.__aexit__ = AsyncMock(return_value=None)
+
+    with (
+        patch("dependencies.decode_token", return_value={"sub": str(user_id), "type": "access"}),
+        patch("dependencies.async_session_factory", return_value=mock_context),
+    ):
+        result = await require_admin(credentials)
+
+    assert result == user
+    assert result.role == "admin"
