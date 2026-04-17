@@ -72,6 +72,21 @@ const Editor = () => {
   const [customBackground, setCustomBackground] = useState<string | undefined>();
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
+  const [renderHistoryId, setRenderHistoryId] = useState<string | undefined>();
+
+  // Build text blocks for sharing
+  const textBlocks = template?.textZones.map((zone) => ({
+    id: zone.id,
+    text: texts[zone.id] || zone.defaultText,
+    x: zone.x,
+    y: zone.y,
+    font_family: zone.fontFamily,
+    font_size: zone.fontSize,
+    color: (customizations[zone.id]?.color) || zone.color,
+    bold: customizations[zone.id]?.bold ?? false,
+    italic: customizations[zone.id]?.italic ?? false,
+    text_align: zone.align,
+  })) || [];
 
   // Refs for async callbacks to avoid stale closures
   const templateRef = useRef<Template | null>(template);
@@ -153,6 +168,9 @@ const Editor = () => {
 
       const res = await api.post('/api/render', body);
       const data = res.data;
+      if (data.render_history_id) {
+        setRenderHistoryId(data.render_history_id);
+      }
       const link = document.createElement('a');
       link.href = data.image_url;
       link.download = `render-${tpl.id}.png`;
@@ -241,9 +259,13 @@ const Editor = () => {
                 onDownload={handleDownload}
                 onUploadBackground={handleUploadBackground}
                 onServerRender={handleServerRender}
+                renderHistoryId={renderHistoryId}
                 rendering={rendering}
                 activeZone={activeZone}
                 setActiveZone={setActiveZone}
+                sessionId={sessionId}
+                templateId={template?.backendId ?? template?.id}
+                textBlocks={textBlocks}
               />
             </div>
           </div>

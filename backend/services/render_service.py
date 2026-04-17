@@ -160,7 +160,7 @@ class RenderService:
         image_url = f"/api/rendered/{filename}"
 
         text_blocks_data = [b.model_dump() for b in request.text_blocks]
-        await self._history_repo.create(
+        history_record = await self._history_repo.create(
             session_id=request.session_id,
             template_id=request.template_id,
             text_blocks=text_blocks_data,
@@ -168,7 +168,7 @@ class RenderService:
             owner_id=request.owner_id,
         )
 
-        return RenderResponse(image_url=image_url)
+        return RenderResponse(image_url=image_url, render_history_id=history_record.id)
 
     async def get_history(self, session_id: str) -> list[HistoryEntry]:
         records = await self._history_repo.get_by_session(session_id)

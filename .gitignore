@@ -57,7 +57,3 @@ package.json
 # frontend
 frontend/package-lock.json
 frontend/package.json
-
-# frontend_old
-frontend_old/package-lock.json
-frontend_old/package.json
