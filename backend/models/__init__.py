@@ -68,3 +68,18 @@ class RenderHistory(Base):
         Index("ix_render_history_session_id", "session_id"),
         Index("ix_render_history_owner_id", "owner_id"),
     )
+
+
+class SharedImage(Base):
+    __tablename__ = "shared_images"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    render_history_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("render_history.id"), nullable=False
+    )
+    share_id: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (Index("ix_shared_images_share_id", "share_id"),)

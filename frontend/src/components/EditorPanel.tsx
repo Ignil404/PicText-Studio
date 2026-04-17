@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Download, Upload, Type, Sparkles } from 'lucide-react';
+import ShareButton from './ShareButton';
 
 interface EditorPanelProps {
   template: Template;
@@ -16,9 +17,24 @@ interface EditorPanelProps {
   onDownload: (format: 'png' | 'jpeg') => void;
   onUploadBackground: (file: File) => void;
   onServerRender?: () => void;
+  renderHistoryId?: string;
   rendering?: boolean;
   activeZone: string | null;
   setActiveZone: (id: string) => void;
+  sessionId?: string;
+  templateId?: string;
+  textBlocks?: Array<{
+    id: string;
+    text: string;
+    x: number;
+    y: number;
+    font_family: string;
+    font_size: number;
+    color: string;
+    bold?: boolean;
+    italic?: boolean;
+    text_align?: string;
+  }>;
 }
 
 const EditorPanel = ({
@@ -30,9 +46,13 @@ const EditorPanel = ({
   onDownload,
   onUploadBackground,
   onServerRender,
+  renderHistoryId,
   rendering,
   activeZone,
   setActiveZone,
+  sessionId,
+  templateId,
+  textBlocks,
 }: EditorPanelProps) => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -211,6 +231,14 @@ const EditorPanel = ({
           </Button>
         </div>
       )}
+
+      {/* Share button - always visible */}
+      <ShareButton 
+        templateId={template.backendId || template.id} 
+        sessionId={sessionId}
+        textBlocks={textBlocks}
+        renderHistoryId={renderHistoryId} 
+      />
     </div>
   );
 };

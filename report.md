@@ -88,11 +88,15 @@
 - Guest -> user миграция при логине
 - 80 тестов
 
+---
+
 ## 2026-04-15
 
 - Заархивирован change `user-auth` — JWT авторизация завершена
 - Смержена ветка feature/user-auth в develop
 - Спланирована админ-панель
+
+---
 
 ## 2026-04-16
 
@@ -101,3 +105,13 @@
 - Frontend: AdminLayout, AdminGuard, Dashboard, Templates CRUD, Users, Stats (4 графика)
 - Seed скрипт `create_admin.py` (admin@example.com / admin123)
 - 39+ тестов для admin функционала, обновлён README.md
+
+---
+
+## 2026-04-17
+
+- API для создания и получения shared images
+- Кнопка "Поделиться" в редакторе
+- Публичная страница просмотра /shared/:id
+- Удалён frontend_old
+

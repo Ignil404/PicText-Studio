@@ -81,20 +81,6 @@ services:
       retries: 3
     restart: unless-stopped
 
-  frontend_old:
-    profiles:
-      - tools
-    build:
-      context: ./frontend_old
-      dockerfile: Dockerfile
-    ports:
-      - "5174:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - frontend-net
-
 volumes:
   pgdata:
   rendered_images:

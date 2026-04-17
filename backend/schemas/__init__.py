@@ -115,6 +115,7 @@ class RenderRequest(BaseModel):
 # Render response
 class RenderResponse(BaseModel):
     image_url: str
+    render_history_id: uuid.UUID | None = None
 
 
 # History entry
@@ -122,6 +123,25 @@ class HistoryEntry(BaseModel):
     id: uuid.UUID
     template_id: uuid.UUID
     template_name: str
+    text_blocks: list[TextBlock | dict[str, object]]
+    image_url: str
+    created_at: datetime
+
+
+# ─── Shared images schemas ────────────────────────────────────────────────
+
+
+class CreateShareRequest(BaseModel):
+    render_history_id: uuid.UUID
+
+
+class ShareResponse(BaseModel):
+    share_id: str
+    url: str
+
+
+class SharedImageResponse(BaseModel):
+    template_id: uuid.UUID
     text_blocks: list[TextBlock | dict[str, object]]
     image_url: str
     created_at: datetime

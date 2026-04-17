@@ -64,7 +64,9 @@ def mock_repo(mock_template: Template) -> TemplateRepository:
 @pytest.fixture
 def mock_history_repo() -> RenderHistoryRepository:
     repo = MagicMock(spec=RenderHistoryRepository)
-    repo.create = AsyncMock(return_value=MagicMock())
+    mock_record = MagicMock()
+    mock_record.id = uuid.uuid4()
+    repo.create = AsyncMock(return_value=mock_record)
     return repo
 
 
