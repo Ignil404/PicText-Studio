@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -29,6 +30,7 @@ class UserListItem(BaseModel):
     role: str
     is_blocked: bool
     created_at: datetime
+    avatar_url: str | None = None
 
 
 class UserListResponse(BaseModel):
@@ -58,6 +60,16 @@ class BlockUserResponse(BaseModel):
     id: uuid.UUID
     is_blocked: bool
     message: str
+
+
+def _get_user_avatar_url(user_id: uuid.UUID) -> str | None:
+    """Check if user has avatar and return URL."""
+    uploads_dir = Path(__file__).parent.parent.parent / "uploads" / "profile-images"
+    for ext in [".jpg", ".jpeg", ".png", ".gif", ".webp"]:
+        avatar_path = uploads_dir / f"{user_id.hex}{ext}"
+        if avatar_path.exists():
+            return f"/api/uploads/{user_id.hex}{ext}"
+    return None
 
 
 @router.get("", response_model=UserListResponse)
@@ -98,6 +110,7 @@ async def list_users(
                     role=u.role,
                     is_blocked=u.is_blocked,
                     created_at=u.created_at,
+                    avatar_url=_get_user_avatar_url(u.id),
                 )
                 for u in users
             ],

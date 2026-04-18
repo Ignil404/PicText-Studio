@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { History, LogIn, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,6 +8,27 @@ import { useAuth } from '@/hooks/useAuth';
 const Header = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAvatar();
+    }
+  }, [isAuthenticated]);
+
+  const fetchAvatar = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get('/api/users/me/image', {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(response.data);
+      setAvatarUrl(url);
+    } catch {
+      setAvatarUrl(null);
+    }
+  };
 
   return (
     <header className="gradient-primary py-8 px-4 text-center relative overflow-hidden">
@@ -35,8 +58,16 @@ const Header = () => {
         </Link>
         {isAuthenticated ? (
           <Link to="/profile">
-            <Button variant="secondary" size="sm" className="rounded-full gap-1.5">
-              <LayoutDashboard className="h-4 w-4" />
+            <Button variant="secondary" size="sm" className="rounded-full gap-2 pr-3">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Аватар"
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-sm">👤</span>
+              )}
               Профиль
             </Button>
           </Link>

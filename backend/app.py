@@ -30,5 +30,9 @@ def create_app() -> FastAPI:
     os.makedirs(rendered_dir, exist_ok=True)
     app.mount("/api/rendered", StaticFiles(directory=rendered_dir), name="rendered")
 
+    uploads_dir = os.path.join(os.path.dirname(__file__), "uploads", "profile-images")
+    os.makedirs(uploads_dir, exist_ok=True)
+    app.mount("/api/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
     logger.info("Middleware configured")
     return app
