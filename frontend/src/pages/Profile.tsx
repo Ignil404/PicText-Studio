@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Header from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { ImageUpload } from '@/components/ImageUpload';
 import {
   LogOut,
   Mail,
@@ -15,6 +18,39 @@ import { useAuth } from '@/hooks/useAuth';
 
 const Profile = () => {
   const { user, sessionId, isLoading, isAuthenticated, logout } = useAuth();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfileImage();
+    }
+  }, [isAuthenticated]);
+
+  const fetchProfileImage = async () => {
+    setImageLoading(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get('/api/users/me/image', {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(response.data);
+      setProfileImageUrl(url);
+    } catch {
+      setProfileImageUrl(null);
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleUploadComplete = (imageUrl: string) => {
+    fetchProfileImage();
+  };
+
+  const handleDeleteComplete = () => {
+    setProfileImageUrl(null);
+  };
 
   if (isLoading) {
     return (
@@ -78,6 +114,14 @@ const Profile = () => {
             <CardDescription>Информация о вашем аккаунте</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!imageLoading && isAuthenticated && (
+              <ImageUpload
+                currentImageUrl={profileImageUrl}
+                onUploadComplete={handleUploadComplete}
+                onDeleteComplete={handleDeleteComplete}
+              />
+            )}
+
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <Mail className="h-5 w-5 text-muted-foreground" />
               <div>

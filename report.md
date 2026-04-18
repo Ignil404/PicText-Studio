@@ -115,3 +115,11 @@
 - Публичная страница просмотра /shared/:id
 - Удалён frontend_old
 
+
+---
+
+## 2026-04-18
+
+- Загрузка аватарок пользователей
+- Backend: endpoint `/users/me/image`, UUID-based хранилище
+- Frontend: страница профиля с загрузкой, компонент ImageUpload

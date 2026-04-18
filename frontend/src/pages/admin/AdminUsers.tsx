@@ -13,6 +13,7 @@ interface User {
   role: string;
   is_blocked: boolean;
   created_at: string;
+  avatar_url?: string;
 }
 
 interface UserListResponse {
@@ -147,7 +148,22 @@ export const AdminUsers = () => {
             <tbody>
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="border-t border-slate-100 hover:bg-slate-50">
-                  <td className="py-4 px-6 text-slate-900">{user.email}</td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-sm">
+                          👤
+                        </div>
+                      )}
+                      <span className="text-slate-900">{user.email}</span>
+                    </div>
+                  </td>
                   <td className="py-4 px-6">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                       user.role === 'admin' 

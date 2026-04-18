@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import Header from '@/components/Header';
 import { useAuth, api } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ const History = () => {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
@@ -41,7 +43,25 @@ const History = () => {
         setError(err instanceof Error ? err.message : 'Failed to fetch history');
         setFetching(false);
       });
+
+    if (isAuthenticated) {
+      fetchAvatar();
+    }
   }, [sessionId, isLoading, isAuthenticated]);
+
+  const fetchAvatar = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get('/api/users/me/image', {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(response.data);
+      setAvatarUrl(url);
+    } catch {
+      setAvatarUrl(null);
+    }
+  };
 
   const displayId = isAuthenticated ? 'авторизован' : sessionId;
 
@@ -55,9 +75,18 @@ const History = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
-            <h2 className="text-2xl font-bold">📜 История рендеров</h2>
-            <p className="text-sm text-muted-foreground font-mono">{displayId}</p>
+          <div className="flex items-center gap-3">
+            {isAuthenticated && avatarUrl && (
+              <img
+                src={avatarUrl}
+                alt="Аватар"
+                className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+              />
+            )}
+            <div>
+              <h2 className="text-2xl font-bold">📜 История рендеров</h2>
+              <p className="text-sm text-muted-foreground font-mono">{displayId}</p>
+            </div>
           </div>
         </div>
 
