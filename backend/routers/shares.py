@@ -80,7 +80,6 @@ async def get_shared_image_embed(share_id: str) -> HTMLResponse:
         image_url = f"{API_BASE_URL}{image_url}"
 
     title = data.author_name or "PicText"
-    author = data.author_name or "Anonymous"
 
     html = f"""<!DOCTYPE html>
 <html>
