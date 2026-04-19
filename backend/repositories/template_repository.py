@@ -35,3 +35,9 @@ class TemplateRepository:
             stmt = select(Template).where(Template.id.in_(template_ids))
             result = await session.execute(stmt)
             return list(result.scalars().all())
+
+    async def get_by_slug(self, slug: str) -> Template | None:
+        async with self._session_factory() as session:
+            stmt = select(Template).where(Template.slug == slug)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()

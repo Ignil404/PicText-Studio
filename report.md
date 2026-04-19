@@ -123,3 +123,5 @@
 - Загрузка аватарок пользователей
 - Backend: endpoint `/users/me/image`, UUID-based хранилище
 - Frontend: страница профиля с загрузкой, компонент ImageUpload
+- Embed для shared images: `/shared/{share_id}/embed` — автономная HTML странца для встраивания
+- Добавлен author_id, author_name, author_avatar в SharedImageResponse

@@ -1,15 +1,18 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { Template, TextCustomization } from '@/types/template';
+import { StickerBlock, ShapeBlock } from '@/shared/types';
 
 interface CanvasPreviewProps {
   template: Template;
   texts: Record<string, string>;
   customizations: Record<string, TextCustomization>;
   customBackground?: string;
+  stickerBlocks?: StickerBlock[];
+  shapeBlocks?: ShapeBlock[];
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
-const CanvasPreview = ({ template, texts, customizations, customBackground, canvasRef }: CanvasPreviewProps) => {
+const CanvasPreview = ({ template, texts, customizations, customBackground, stickerBlocks = [], shapeBlocks = [], canvasRef }: CanvasPreviewProps) => {
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -25,7 +28,7 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, canv
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          drawImageCover(ctx, img, canvas.width, canvas.height);
           drawOverlay();
         };
         img.src = customBackground;
@@ -66,6 +69,77 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, canv
           }
           ctx.restore();
         }
+      });
+
+      // Stickers
+      stickerBlocks.forEach((sticker) => {
+        ctx.save();
+        ctx.font = `${sticker.size}px "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sticker.emoji, sticker.x * canvas.width, sticker.y * canvas.height);
+        ctx.restore();
+      });
+
+      // Shapes
+      shapeBlocks.forEach((shape) => {
+        ctx.save();
+        const x = shape.x * canvas.width;
+        const y = shape.y * canvas.height;
+        const w = shape.width || 100;
+        const h = shape.height || 100;
+        ctx.strokeStyle = shape.color;
+        ctx.fillStyle = shape.color;
+        ctx.lineWidth = shape.strokeWidth;
+
+        if (shape.type === 'rectangle') {
+          if (shape.filled) {
+            ctx.fillRect(x, y, w, h);
+          } else {
+            ctx.strokeRect(x, y, w, h);
+          }
+        } else if (shape.type === 'circle') {
+          ctx.beginPath();
+          ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+          if (shape.filled) {
+            ctx.fill();
+          } else {
+            ctx.stroke();
+          }
+        } else if (shape.type === 'line') {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + w, y + h);
+          ctx.stroke();
+        } else if (shape.type === 'arrow') {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + w, y + h);
+          ctx.stroke();
+          // Arrow head
+          const angle = Math.atan2(h, w);
+          const arrowSize = Math.max(shape.strokeWidth * 3, 10);
+          const headAngle = 0.5;
+          const ex = x + w, ey = y + h;
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(
+            ex - arrowSize * Math.cos(angle - headAngle),
+            ey - arrowSize * Math.sin(angle - headAngle)
+          );
+          ctx.lineTo(
+            ex - arrowSize * Math.cos(angle + headAngle),
+            ey - arrowSize * Math.sin(angle + headAngle)
+          );
+          ctx.closePath();
+          if (shape.filled) {
+            ctx.fill();
+          } else {
+            ctx.stroke();
+          }
+        }
+
+        ctx.restore();
       });
 
       // Text zones
@@ -116,7 +190,7 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, canv
     };
 
     drawContent();
-  }, [template, texts, customizations, customBackground, canvasRef]);
+  }, [template, texts, customizations, customBackground, stickerBlocks, shapeBlocks, canvasRef]);
 
   useEffect(() => {
     draw();
@@ -132,6 +206,41 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, canv
     </div>
   );
 };
+
+function drawImageCover(
+  ctx: CanvasRenderingContext2D,
+  image: CanvasImageSource & { width: number; height: number },
+  targetWidth: number,
+  targetHeight: number,
+) {
+  const sourceAspect = image.width / image.height;
+  const targetAspect = targetWidth / targetHeight;
+
+  let sourceX = 0;
+  let sourceY = 0;
+  let sourceWidth = image.width;
+  let sourceHeight = image.height;
+
+  if (sourceAspect > targetAspect) {
+    sourceWidth = image.height * targetAspect;
+    sourceX = (image.width - sourceWidth) / 2;
+  } else {
+    sourceHeight = image.width / targetAspect;
+    sourceY = (image.height - sourceHeight) / 2;
+  }
+
+  ctx.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+    0,
+    0,
+    targetWidth,
+    targetHeight,
+  );
+}
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const result: string[] = [];

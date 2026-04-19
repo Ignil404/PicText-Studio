@@ -1,13 +1,16 @@
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from structlog import get_logger
 
 from database import async_session_factory
 from dependencies import get_current_user_optional
 from models import User
 from repositories import RenderHistoryRepository, TemplateRepository
-from schemas import RenderRequest, RenderResponse
+from schemas import ExportZipRequest, ExportZipResponse, RenderRequest, RenderResponse
 from services import RenderError, RenderService
+
+logger = get_logger(__name__)
 
 router = APIRouter(tags=["render"])
 optional_user_dependency = Depends(get_current_user_optional)
@@ -55,6 +58,35 @@ async def render_image(
 
     try:
         return await render_service.render_image(request)
+    except RenderError as exc:
+        logger.error("Render failed", error=str(exc))
+        if "Template not found" in str(exc):
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/api/export-zip", response_model=ExportZipResponse)
+async def export_zip(
+    request: ExportZipRequest,
+    raw_request: Request,
+    user: User | None = optional_user_dependency,
+) -> ExportZipResponse:
+    rate_limit_key = str(user.id) if user else (request.session_id or "unknown")
+    if not _check_rate_limit(rate_limit_key):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded: max {_RENDER_LIMIT} renders per {_RENDER_WINDOW}s",
+        )
+
+    template_repo = TemplateRepository(async_session_factory)
+    history_repo = RenderHistoryRepository(async_session_factory)
+    render_service = RenderService(template_repo, history_repo)
+
+    if user:
+        request.owner_id = user.id
+
+    try:
+        return await render_service.export_zip(request)
     except RenderError as exc:
         if "Template not found" in str(exc):
             raise HTTPException(status_code=404, detail=str(exc)) from exc

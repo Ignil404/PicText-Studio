@@ -20,3 +20,9 @@ FONT_REGISTRY: dict[str, str] = {
     "Rubik Mono One": "RubikMonoOne-Regular.ttf",
     "Inter": "Inter-Regular.ttf",
 }
+
+RESOLUTION_MAP: dict[str, tuple[int, int]] = {
+    "sd": (640, 480),
+    "hd": (1920, 1080),
+    "4k": (3840, 2160),
+}

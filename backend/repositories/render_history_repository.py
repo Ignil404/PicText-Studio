@@ -19,6 +19,8 @@ class RenderHistoryRepository:
         image_path: str,
         session_id: str | None = None,
         owner_id: uuid.UUID | None = None,
+        sticker_blocks: list[dict[str, object]] | None = None,
+        shape_blocks: list[dict[str, object]] | None = None,
     ) -> RenderHistory:
         async with self._session_factory() as session:
             record = RenderHistory(
@@ -26,6 +28,8 @@ class RenderHistoryRepository:
                 owner_id=owner_id,
                 template_id=template_id,
                 text_blocks=text_blocks,
+                sticker_blocks=sticker_blocks or [],
+                shape_blocks=shape_blocks or [],
                 image_path=image_path,
             )
             session.add(record)

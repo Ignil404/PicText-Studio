@@ -21,6 +21,9 @@ class SharedImageData:
     text_blocks: list[dict[str, object]]
     image_url: str
     created_at: datetime
+    author_id: uuid.UUID | None = None
+    author_name: str | None = None
+    author_avatar: str | None = None
 
 
 class SharedImageService:
@@ -70,6 +73,8 @@ class SharedImageService:
 
         Returns render data if found, None if not found.
         """
+        from models import User
+
         async with async_session_factory() as session:
             result = await session.execute(
                 select(SharedImage).where(SharedImage.share_id == share_id)
@@ -87,9 +92,25 @@ class SharedImageService:
             if render is None:
                 return None
 
+            author_id = None
+            author_name = None
+            author_avatar = None
+            if render.owner_id:
+                result = await session.execute(
+                    select(User).where(User.id == render.owner_id)
+                )
+                user = result.scalar_one_or_none()
+                if user:
+                    author_id = user.id
+                    author_name = user.name or user.email.split("@")[0]
+                    author_avatar = user.avatar_url
+
             return SharedImageData(
                 template_id=render.template_id,
                 text_blocks=render.text_blocks,
                 image_url=render.image_path,
                 created_at=render.created_at,
+                author_id=author_id,
+                author_name=author_name,
+                author_avatar=author_avatar,
             )

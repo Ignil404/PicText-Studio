@@ -45,7 +45,7 @@ const Profile = () => {
   };
 
   const handleUploadComplete = (imageUrl: string) => {
-    fetchProfileImage();
+    setProfileImageUrl(imageUrl);
   };
 
   const handleDeleteComplete = () => {

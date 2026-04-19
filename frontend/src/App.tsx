@@ -11,6 +11,8 @@ import Auth from "./pages/Auth.tsx";
 import Profile from "./pages/Profile.tsx";
 import History from "./pages/History.tsx";
 import SharedImage from "./pages/SharedImage.tsx";
+import ApiDocs from "./pages/ApiDocs.tsx";
+import Webhooks from "./pages/Webhooks.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
@@ -69,6 +71,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/shared/:shareId" element={<SharedImage />} />
+              <Route path="/api-docs" element={<ApiDocs />} />
+              <Route path="/webhooks" element={<Webhooks />} />
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />

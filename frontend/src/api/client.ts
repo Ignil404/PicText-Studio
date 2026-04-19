@@ -92,12 +92,18 @@ export function mergeTemplates(
   return result;
 }
 
-/** Fetch a single template by UUID from backend. */
+/** Fetch a single template by UUID or slug from backend. */
 export async function fetchTemplateById(id: string): Promise<BackendTemplate | null> {
-  const res = await fetch(`/api/templates/${id}`);
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Failed to fetch template: ${res.status}`);
-  return res.json();
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const endpoint = isUuid ? `/api/templates/${id}` : `/api/templates/by-slug/${id}`;
+    const res = await fetch(endpoint);
+    if (res.status === 404) return null;
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
 
 /** Fetch available categories from backend. */

@@ -14,9 +14,9 @@ interface EditorPanelProps {
   customizations: Record<string, TextCustomization>;
   onTextChange: (zoneId: string, text: string) => void;
   onCustomizationChange: (zoneId: string, custom: TextCustomization) => void;
-  onDownload: (format: 'png' | 'jpeg') => void;
+  onDownload: () => void;
   onUploadBackground: (file: File) => void;
-  onServerRender?: () => void;
+  onServerRender?: (options?: { format?: string; quality?: string; resolution?: string }) => void;
   renderHistoryId?: string;
   rendering?: boolean;
   activeZone: string | null;
@@ -203,14 +203,9 @@ const EditorPanel = ({
           <Download className="h-4 w-4 text-primary" />
           Скачать
         </Label>
-        <div className="flex gap-2">
-          <Button onClick={() => onDownload('png')} className="flex-1 rounded-xl font-bold">
-            📥 PNG
-          </Button>
-          <Button onClick={() => onDownload('jpeg')} variant="secondary" className="flex-1 rounded-xl font-bold">
-            📥 JPEG
-          </Button>
-        </div>
+        <Button onClick={onDownload} className="w-full rounded-xl font-bold">
+          📥 Открыть экспорт
+        </Button>
       </div>
 
       {/* Server render */}
@@ -221,7 +216,7 @@ const EditorPanel = ({
             Рендер на сервере
           </Label>
           <Button
-            onClick={onServerRender}
+            onClick={() => onServerRender?.()}
             disabled={rendering}
             variant="outline"
             className="w-full rounded-xl font-bold gap-2"

@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import { useAuth, api } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, Heart } from 'lucide-react';
 
 interface HistoryEntry {
   id: string;
@@ -22,6 +22,21 @@ const History = () => {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [favorited, setFavorited] = useState<Set<string>>(new Set());
+
+  const toggleFavorite = async (entryId: string) => {
+    if (favorited.has(entryId)) {
+      try {
+        await api.delete(`/api/favorites/${entryId}`);
+        setFavorited((prev) => { const next = new Set(prev); next.delete(entryId); return next; });
+      } catch { /* ignore */ }
+    } else {
+      try {
+        await api.post('/api/favorites', { render_history_id: entryId });
+        setFavorited((prev) => { const next = new Set(prev); next.add(entryId); return next; });
+      } catch { /* ignore */ }
+    }
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -129,6 +144,16 @@ const History = () => {
                         <Download className="h-4 w-4" />
                       </Button>
                     </a>
+                    {isAuthenticated && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => toggleFavorite(entry.id)}
+                      >
+                        <Heart className={`h-4 w-4 ${favorited.has(entry.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

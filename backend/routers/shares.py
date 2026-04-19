@@ -1,6 +1,7 @@
 from typing import cast
 
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import HTMLResponse
 
 from schemas import (
     CreateShareRequest,
@@ -53,6 +54,51 @@ async def create_share(
         ) from e
 
 
+@router.get("/shared/{share_id}/embed")
+async def get_shared_image_embed(share_id: str) -> HTMLResponse:
+    """Get shared image for embed without authentication."""
+    service = SharedImageService()
+    data = await service.get_by_share_id(share_id)
+
+    if data is None:
+        return HTMLResponse(
+            content="<html><body><h1>Image not found</h1></body></html>",
+            status_code=404,
+        )
+
+    image_url = data.image_url
+    if not image_url.startswith("http"):
+        API_BASE_URL = "http://localhost:8000"
+        image_url = f"{API_BASE_URL}{image_url}"
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+    body {{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #f5f5f5;
+    }}
+    img {{
+      max-width: 100%;
+      max-height: 100vh;
+      object-fit: contain;
+    }}
+  </style>
+</head>
+<body>
+  <img src="{image_url}" alt="Shared image" />
+</body>
+</html>"""
+    return HTMLResponse(content=html)
+
+
 @router.get("/api/shared/{share_id}", response_model=SharedImageResponse)
 async def get_shared_image(share_id: str) -> SharedImageResponse:
     """Get a shared image by its share ID."""
@@ -71,4 +117,7 @@ async def get_shared_image(share_id: str) -> SharedImageResponse:
         text_blocks=cast(list[TextBlock | dict[str, object]], data.text_blocks),
         image_url=data.image_url,
         created_at=data.created_at,
+        author_id=data.author_id,
+        author_name=data.author_name or "Аноним",
+        author_avatar=data.author_avatar,
     )

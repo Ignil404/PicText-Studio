@@ -44,6 +44,20 @@ class TemplateService:
         await self._cache.set(cache_key, result)
         return result
 
+    async def get_by_slug(self, slug: str) -> dict[str, object] | None:
+        cache_key = f"template:slug:{slug}"
+        cached = await self._cache.get(cache_key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
+
+        template = await self._repo.get_by_slug(slug)
+        if template is None:
+            return None
+
+        result = TemplateResponse.from_model(template).model_dump()
+        await self._cache.set(cache_key, result)
+        return result
+
     async def get_categories(self) -> list[str]:
         cached = await self._cache.get(_CACHE_KEY_CATEGORIES)
         if cached is not None:

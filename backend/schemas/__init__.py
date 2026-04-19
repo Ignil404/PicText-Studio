@@ -63,6 +63,7 @@ class TextZone(BaseModel):
 class TemplateResponse(BaseModel):
     id: uuid.UUID
     name: str
+    slug: str = ""
     category: str
     imageUrl: str
     width: int
@@ -79,6 +80,7 @@ class TemplateResponse(BaseModel):
         return cls(
             id=template.id,
             name=template.name,
+            slug=getattr(template, "slug", ""),
             category=template.category,
             imageUrl=template.image_path,
             width=template.width,
@@ -102,12 +104,39 @@ class TextBlock(BaseModel):
     text_align: str | None = None  # "left" | "center" | "right", default left
 
 
+class StickerBlock(BaseModel):
+    id: str
+    emoji: str
+    x: float
+    y: float
+    size: int = 48
+
+
+class ShapeBlock(BaseModel):
+    id: str
+    type: str = "rectangle"  # "rectangle" | "circle" | "line" | "arrow"
+    x: float
+    y: float
+    width: float | None = None
+    height: float | None = None
+    color: str = "#000000"
+    filled: bool = False
+    stroke_width: int = 2
+
+
 # Full render request
 class RenderRequest(BaseModel):
     session_id: str | None = None
     template_id: uuid.UUID
     text_blocks: list[TextBlock]
-    format: str = Field(pattern=r"^(png|jpeg)$", default="png")
+    sticker_blocks: list[StickerBlock] = []
+    shape_blocks: list[ShapeBlock] = []
+    format: str = Field(pattern=r"^(png|jpeg|webp)$", default="png")
+    quality: int = Field(default=85, ge=1, le=100)
+    resolution: str = Field(default="hd", pattern=r"^(sd|hd|4k)$")
+    brightness: float = Field(default=1.0, ge=0.5, le=2.0)
+    contrast: float = Field(default=1.0, ge=0.5, le=2.0)
+    saturation: float = Field(default=1.0, ge=0.0, le=2.0)
     # Set by the router for authenticated renders
     owner_id: uuid.UUID | None = None
 
@@ -118,12 +147,30 @@ class RenderResponse(BaseModel):
     render_history_id: uuid.UUID | None = None
 
 
+# Multi-format export request
+class ExportZipRequest(BaseModel):
+    session_id: str | None = None
+    template_id: uuid.UUID
+    text_blocks: list[TextBlock]
+    formats: list[str] = Field(default=["png"], min_length=1)
+    quality: int = Field(default=85, ge=1, le=100)
+    resolution: str = Field(default="hd", pattern=r"^(sd|hd|4k)$")
+    owner_id: uuid.UUID | None = None
+
+
+# ZIP export response
+class ExportZipResponse(BaseModel):
+    download_url: str
+
+
 # History entry
 class HistoryEntry(BaseModel):
     id: uuid.UUID
     template_id: uuid.UUID
     template_name: str
     text_blocks: list[TextBlock | dict[str, object]]
+    sticker_blocks: list[StickerBlock | dict[str, object]] = []
+    shape_blocks: list[ShapeBlock | dict[str, object]] = []
     image_url: str
     created_at: datetime
 
@@ -133,6 +180,12 @@ class HistoryEntry(BaseModel):
 
 class CreateShareRequest(BaseModel):
     render_history_id: uuid.UUID
+
+
+class RemixRequest(BaseModel):
+    render_history_id: uuid.UUID
+    new_text_blocks: list[TextBlock]
+    template_id: uuid.UUID
 
 
 class ShareResponse(BaseModel):
@@ -145,3 +198,6 @@ class SharedImageResponse(BaseModel):
     text_blocks: list[TextBlock | dict[str, object]]
     image_url: str
     created_at: datetime
+    author_id: uuid.UUID | None = None
+    author_name: str | None = None
+    author_avatar: str | None = None

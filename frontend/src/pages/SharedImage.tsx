@@ -21,6 +21,9 @@ interface SharedImageData {
   }>;
   image_url: string;
   created_at: string;
+  author_id?: string;
+  author_name?: string;
+  author_avatar?: string;
 }
 
 const SharedImagePage = () => {
@@ -97,9 +100,24 @@ const SharedImagePage = () => {
             />
           </div>
           <div className="text-center space-y-4">
+            {/* Author info */}
+            {data.author_name && (
+              <p className="text-sm text-muted-foreground">
+                Автор: {data.author_avatar && (
+                  <img src={data.author_avatar} alt="" className="inline w-5 h-5 rounded-full mr-1" />
+                )}
+                {data.author_name}
+              </p>
+            )}
+            
             <Link to="/">
               <Button className="rounded-full font-bold gap-2">
                 ✨ Создать своё
+              </Button>
+            </Link>
+            <Link to={`/editor/${data.template_id}`}>
+              <Button variant="outline" className="rounded-full gap-2">
+                🔄 Ремикс
               </Button>
             </Link>
           </div>
