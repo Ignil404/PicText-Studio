@@ -42,9 +42,7 @@ async def get_api_key_user(
         if not key_obj:
             return None
 
-        result = await session.execute(
-            select(User).where(User.id == key_obj.user_id)
-        )
+        result = await session.execute(select(User).where(User.id == key_obj.user_id))
         user = result.scalar_one_or_none()
         if not user:
             return None

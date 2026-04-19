@@ -96,9 +96,7 @@ class SharedImageService:
             author_name = None
             author_avatar = None
             if render.owner_id:
-                result = await session.execute(
-                    select(User).where(User.id == render.owner_id)
-                )
+                result = await session.execute(select(User).where(User.id == render.owner_id))
                 user = result.scalar_one_or_none()
                 if user:
                     author_id = user.id

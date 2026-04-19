@@ -73,9 +73,7 @@ async def list_webhooks(
 ) -> WebhookListResponse:
     """List all webhooks for the user."""
     async with async_session_factory() as session:
-        result = await session.execute(
-            select(Webhook).where(Webhook.user_id == user.id)
-        )
+        result = await session.execute(select(Webhook).where(Webhook.user_id == user.id))
         webhooks = result.scalars().all()
 
         return WebhookListResponse(

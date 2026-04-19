@@ -70,9 +70,7 @@ async def list_api_keys(
 ) -> ApiKeyListResponse:
     """List all API keys for the authenticated user."""
     async with async_session_factory() as session:
-        result = await session.execute(
-            select(ApiKey).where(ApiKey.user_id == user.id)
-        )
+        result = await session.execute(select(ApiKey).where(ApiKey.user_id == user.id))
         keys = result.scalars().all()
 
         return ApiKeyListResponse(

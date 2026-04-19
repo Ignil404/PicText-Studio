@@ -248,6 +248,7 @@ class RenderService:
                     arrow_size = max(stroke_width * 3, 8)
                     end_x, end_y = x + width, y + height
                     import math
+
                     dx = width
                     dy = height
                     length = math.sqrt(dx * dx + dy * dy) if (dx * dx + dy * dy) > 0 else 1

@@ -59,6 +59,7 @@ async def remix(
 
     # Get original render to verify access
     from sqlalchemy import select
+
     async with async_session_factory() as session:
         result = await session.execute(
             select(RenderHistory).where(RenderHistory.id == request.render_history_id)

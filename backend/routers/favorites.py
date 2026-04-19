@@ -111,9 +111,7 @@ async def list_favorites(
     """List all favorites for the authenticated user."""
     async with async_session_factory() as session:
         result = await session.execute(
-            select(Favorite)
-            .where(Favorite.user_id == user.id)
-            .order_by(Favorite.created_at.desc())
+            select(Favorite).where(Favorite.user_id == user.id).order_by(Favorite.created_at.desc())
         )
         favorites = result.scalars().all()
 
