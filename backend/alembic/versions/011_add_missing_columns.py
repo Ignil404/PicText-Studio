@@ -27,15 +27,11 @@ def upgrade() -> None:
 
     op.add_column(
         "render_history",
-        sa.Column(
-            "sticker_blocks", JSONB, nullable=False, server_default="[]"
-        ),
+        sa.Column("sticker_blocks", JSONB, nullable=False, server_default="[]"),
     )
     op.add_column(
         "render_history",
-        sa.Column(
-            "shape_blocks", JSONB, nullable=False, server_default="[]"
-        ),
+        sa.Column("shape_blocks", JSONB, nullable=False, server_default="[]"),
     )
     op.add_column(
         "render_history",
