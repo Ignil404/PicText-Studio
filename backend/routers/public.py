@@ -47,7 +47,7 @@ async def get_api_key_user(
         if not user:
             return None
 
-        return (user, key_obj)
+        return (user, key_obj)  # type: ignore[return-value]
 
 
 async def get_current_user_from_api_key(

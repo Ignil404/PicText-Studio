@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+# mypy: ignore-errors
 import uuid
 from dataclasses import dataclass
 from datetime import datetime

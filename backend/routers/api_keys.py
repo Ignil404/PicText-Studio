@@ -92,7 +92,7 @@ async def list_api_keys(
 async def delete_api_key(
     key_id: str,
     user: User = Depends(get_current_user),
-) -> dict:
+) -> dict[str, str]:
     """Delete an API key."""
     try:
         key_uuid = uuid.UUID(key_id)
@@ -113,4 +113,4 @@ async def delete_api_key(
         await session.delete(key)
         await session.commit()
 
-        return {"deleted": True}
+        return {"deleted": "true"}

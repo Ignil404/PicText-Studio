@@ -76,9 +76,9 @@ async def remix(
     )
     render_req.owner_id = user.id if user else None
 
-    result = await render_service.render_image(render_req)
+    render_result = await render_service.render_image(render_req)
 
     # Note: remix_parent_id would need to be updated in render_service.render_image()
     # For now, the parent info is in the request but not persisted
 
-    return result
+    return render_result

@@ -91,6 +91,9 @@ async def test_render_image_creates_file(render_service, mock_repo, mock_history
     # Override mock to use this specific ID
     mock_template = MagicMock(spec=Template)
     mock_template.image_path = str(tmp_path / "test_template.png")
+    mock_template.width = 600
+    mock_template.height = 600
+    mock_template.text_zones = []
     img = Image.new("RGBA", (600, 600), (0, 255, 0, 255))
     img.save(mock_template.image_path)
     mock_repo.get_by_id = AsyncMock(return_value=mock_template)
@@ -137,6 +140,9 @@ async def test_render_image_jpeg_format(render_service, mock_repo, mock_history_
     tid = uuid.uuid4()
     mock_template = MagicMock(spec=Template)
     mock_template.image_path = str(tmp_path / "test_template.png")
+    mock_template.width = 600
+    mock_template.height = 600
+    mock_template.text_zones = []
     img = Image.new("RGBA", (600, 600), (0, 0, 255, 255))
     img.save(mock_template.image_path)
     mock_repo.get_by_id = AsyncMock(return_value=mock_template)
@@ -158,6 +164,9 @@ async def test_render_image_records_history(render_service, mock_repo, mock_hist
     tid = uuid.uuid4()
     mock_template = MagicMock(spec=Template)
     mock_template.image_path = str(tmp_path / "test_template.png")
+    mock_template.width = 600
+    mock_template.height = 600
+    mock_template.text_zones = []
     img = Image.new("RGBA", (600, 600), (128, 128, 128, 255))
     img.save(mock_template.image_path)
     mock_repo.get_by_id = AsyncMock(return_value=mock_template)

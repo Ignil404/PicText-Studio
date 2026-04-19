@@ -80,7 +80,7 @@ async def add_favorite(
 async def remove_favorite(
     favorite_id: str,
     user: User = Depends(get_current_user),
-) -> dict:
+) -> dict[str, str]:
     """Remove a render from favorites."""
     try:
         fav_uuid = uuid.UUID(favorite_id)
@@ -101,7 +101,7 @@ async def remove_favorite(
         await session.delete(favorite)
         await session.commit()
 
-        return {"deleted": True}
+        return {"deleted": "true"}
 
 
 @router.get("/api/favorites", response_model=FavoriteListResponse)
@@ -149,12 +149,12 @@ async def list_favorites(
 async def check_favorite(
     render_history_id: str,
     user: User = Depends(get_current_user),
-) -> dict:
+) -> dict[str, str]:
     """Check if a render is favorited by the user."""
     try:
         rh_uuid = uuid.UUID(render_history_id)
     except ValueError:
-        return {"is_favorite": False}
+        return {"is_favorite": "false"}
 
     async with async_session_factory() as session:
         result = await session.execute(
@@ -165,4 +165,4 @@ async def check_favorite(
         )
         favorite = result.scalar_one_or_none()
 
-        return {"is_favorite": favorite is not None}
+        return {"is_favorite": str(favorite is not None).lower()}

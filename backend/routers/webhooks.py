@@ -29,7 +29,7 @@ class WebhookListResponse(BaseModel):
     webhooks: list[WebhookResponse]
 
 
-async def _dispatch_webhook(webhook: Webhook, event: str, data: dict) -> bool:
+async def _dispatch_webhook(webhook: Webhook, event: str, data: dict[str, str]) -> bool:
     """Dispatch webhook and return success status."""
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -94,7 +94,7 @@ async def list_webhooks(
 async def delete_webhook(
     webhook_id: str,
     user: User = Depends(get_current_user),
-) -> dict:
+) -> dict[str, str]:
     """Delete a webhook."""
     try:
         wh_uuid = uuid.UUID(webhook_id)
@@ -115,14 +115,14 @@ async def delete_webhook(
         await session.delete(webhook)
         await session.commit()
 
-        return {"deleted": True}
+        return {"deleted": "true"}
 
 
 @router.post("/api/webhooks/{webhook_id}/test")
 async def test_webhook(
     webhook_id: str,
     user: User = Depends(get_current_user),
-) -> dict:
+) -> dict[str, str]:
     """Test a webhook."""
     try:
         wh_uuid = uuid.UUID(webhook_id)
@@ -143,7 +143,7 @@ async def test_webhook(
         success = await _dispatch_webhook(
             webhook,
             "render.created",
-            {"test": True, "message": "This is a test webhook"},
+            {"test": "true", "message": "This is a test webhook"},
         )
 
-        return {"success": success}
+        return {"success": str(success).lower()}

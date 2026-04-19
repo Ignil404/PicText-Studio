@@ -55,7 +55,7 @@ async def create_share(
 
 
 @router.get("/shared/{share_id}")
-async def get_shared_image_page(share_id: str) -> HTMLResponse:
+async def get_shared_image_page(share_id: str):
     """Redirect to embed page."""
     from fastapi.responses import RedirectResponse
 

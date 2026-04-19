@@ -15,11 +15,13 @@ def _make_template_obj(**overrides) -> Template:
     defaults = {
         "id": uuid.uuid4(),
         "name": "Test",
+        "slug": "test-template",
         "category": "reaction",
         "image_path": "/images/test.png",
         "width": 600,
         "height": 600,
         "text_zones": {},
+        "is_active": True,
     }
     return Template(**{**defaults, **overrides})
 
