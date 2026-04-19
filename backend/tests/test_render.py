@@ -1,6 +1,7 @@
 """Integration tests for render API endpoints."""
 
 import uuid
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,12 +14,21 @@ from models import User
 pytestmark = pytest.mark.integration
 
 
+@dataclass
+class MockRenderResponse:
+    image_url: str
+    render_history_id: uuid.UUID
+
+
 @pytest.mark.asyncio
 async def test_render_valid_request_returns_200(client: TestClient):
     with patch("routers.render.RenderService") as mock_service_cls:
         mock_service = MagicMock()
         mock_service.render_image = AsyncMock(
-            return_value=MagicMock(image_url="/api/rendered/test-image.png")
+            return_value=MockRenderResponse(
+                image_url="/api/rendered/test-image.png",
+                render_history_id=uuid.uuid4(),
+            )
         )
         mock_service_cls.return_value = mock_service
 
@@ -101,7 +111,10 @@ async def test_render_authenticated_request_sets_owner_id(client: TestClient):
         with patch("routers.render.RenderService") as mock_service_cls:
             mock_service = MagicMock()
             mock_service.render_image = AsyncMock(
-                return_value=MagicMock(image_url="/api/rendered/test-image.png")
+                return_value=MockRenderResponse(
+                    image_url="/api/rendered/test-image.png",
+                    render_history_id=uuid.uuid4(),
+                )
             )
             mock_service_cls.return_value = mock_service
 
