@@ -115,7 +115,6 @@
 - Публичная страница просмотра /shared/:id
 - Удалён frontend_old
 
-
 ---
 
 ## 2026-04-18
@@ -125,3 +124,10 @@
 - Frontend: страница профиля с загрузкой, компонент ImageUpload
 - Embed для shared images: `/shared/{share_id}/embed` — автономная HTML странца для встраивания
 - Добавлен author_id, author_name, author_avatar в SharedImageResponse
+
+---
+
+## 2026-04-19
+
+- ShareModal с кнопками Telegram, VK, WhatsApp, Twitter
+- Stickers and shapes в редакторе

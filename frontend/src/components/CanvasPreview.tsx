@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Template, TextCustomization } from '@/types/template';
 import { StickerBlock, ShapeBlock } from '@/shared/types';
 
@@ -9,10 +9,110 @@ interface CanvasPreviewProps {
   customBackground?: string;
   stickerBlocks?: StickerBlock[];
   shapeBlocks?: ShapeBlock[];
+  onMoveSticker?: (id: string, x: number, y: number) => void;
+  onMoveShape?: (id: string, x: number, y: number) => void;
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
-const CanvasPreview = ({ template, texts, customizations, customBackground, stickerBlocks = [], shapeBlocks = [], canvasRef }: CanvasPreviewProps) => {
+const CanvasPreview = ({
+  template,
+  texts,
+  customizations,
+  customBackground,
+  stickerBlocks = [],
+  shapeBlocks = [],
+  onMoveSticker,
+  onMoveShape,
+  canvasRef,
+}: CanvasPreviewProps) => {
+  const [dragState, setDragState] = React.useState<{
+    type: 'sticker' | 'shape';
+    id: string;
+    startX: number;
+    startY: number;
+    origX: number;
+    origY: number;
+  } | null>(null);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    // Check if clicking on a sticker
+    const clickedSticker = stickerBlocks.find((s) => {
+      const sx = s.x * canvas.width;
+      const sy = s.y * canvas.height;
+      const size = s.size;
+      return Math.abs(x - sx) < size / 2 && Math.abs(y - sy) < size / 2;
+    });
+
+    if (clickedSticker) {
+      setDragState({
+        type: 'sticker',
+        id: clickedSticker.id,
+        startX: x,
+        startY: y,
+        origX: clickedSticker.x,
+        origY: clickedSticker.y,
+      });
+      return;
+    }
+
+    // Check if clicking on a shape
+    const clickedShape = shapeBlocks.find((s) => {
+      const sx = s.x * canvas.width;
+      const sy = s.y * canvas.height;
+      const sw = (s.width || 100) * canvas.width;
+      const sh = (s.height || 100) * canvas.height;
+      return x > sx && x < sx + sw && y > sy && y < sy + sh;
+    });
+
+    if (clickedShape) {
+      setDragState({
+        type: 'shape',
+        id: clickedShape.id,
+        startX: x,
+        startY: y,
+        origX: clickedShape.x,
+        origY: clickedShape.y,
+      });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!dragState) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    const dx = (x - dragState.startX) / canvas.width;
+    const dy = (y - dragState.startY) / canvas.height;
+
+    const newX = Math.max(0, Math.min(1, dragState.origX + dx));
+    const newY = Math.max(0, Math.min(1, dragState.origY + dy));
+
+    if (dragState.type === 'sticker' && onMoveSticker) {
+      onMoveSticker(dragState.id, newX, newY);
+    } else if (dragState.type === 'shape' && onMoveShape) {
+      onMoveShape(dragState.id, newX, newY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDragState(null);
+  };
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -190,7 +290,7 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, stic
     };
 
     drawContent();
-  }, [template, texts, customizations, customBackground, stickerBlocks, shapeBlocks, canvasRef]);
+  }, [template, texts, customizations, customBackground, stickerBlocks, shapeBlocks, onMoveSticker, onMoveShape, canvasRef]);
 
   useEffect(() => {
     draw();
@@ -200,8 +300,12 @@ const CanvasPreview = ({ template, texts, customizations, customBackground, stic
     <div className="flex items-center justify-center bg-muted/50 rounded-xl p-4 overflow-hidden">
       <canvas
         ref={canvasRef}
-        className="max-w-full max-h-[70vh] rounded-lg shadow-2xl"
+        className="max-w-full max-h-[70vh] rounded-lg shadow-2xl cursor-move"
         style={{ imageRendering: 'auto' }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       />
     </div>
   );

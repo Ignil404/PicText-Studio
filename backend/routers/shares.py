@@ -54,6 +54,14 @@ async def create_share(
         ) from e
 
 
+@router.get("/shared/{share_id}")
+async def get_shared_image_page(share_id: str) -> HTMLResponse:
+    """Redirect to embed page."""
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url=f"/shared/{share_id}/embed")
+
+
 @router.get("/shared/{share_id}/embed")
 async def get_shared_image_embed(share_id: str) -> HTMLResponse:
     """Get shared image for embed without authentication."""
@@ -71,11 +79,28 @@ async def get_shared_image_embed(share_id: str) -> HTMLResponse:
         API_BASE_URL = "http://localhost:8000"
         image_url = f"{API_BASE_URL}{image_url}"
 
+    title = data.author_name or "PicText"
+    author = data.author_name or "Anonymous"
+
     html = f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+
+  <!-- Open Graph / Telegram / VK -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{title}" />
+  <meta property="og:description" content="Создано в PicText" />
+  <meta property="og:image" content="{image_url}" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{title}" />
+  <meta name="twitter:description" content="Создано в PicText" />
+  <meta name="twitter:image" content="{image_url}" />
+
   <style>
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
     body {{
@@ -94,6 +119,7 @@ async def get_shared_image_embed(share_id: str) -> HTMLResponse:
 </head>
 <body>
   <img src="{image_url}" alt="Shared image" />
+  <meta property="og:image:alt" content="{title}" />
 </body>
 </html>"""
     return HTMLResponse(content=html)

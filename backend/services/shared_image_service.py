@@ -102,8 +102,8 @@ class SharedImageService:
                 user = result.scalar_one_or_none()
                 if user:
                     author_id = user.id
-                    author_name = user.name or user.email.split("@")[0]
-                    author_avatar = user.avatar_url
+                    author_name = user.email.split("@")[0]
+                    author_avatar = None
 
             return SharedImageData(
                 template_id=render.template_id,

@@ -88,6 +88,7 @@ const Editor = () => {
   const [shapeColor, setShapeColor] = useState('#000000');
   const [shapeFilled, setShapeFilled] = useState(false);
   const [shapeStroke, setShapeStroke] = useState(2);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   // Build text blocks for sharing
   const textBlocks = template?.textZones.map((zone) => ({
@@ -115,13 +116,15 @@ const Editor = () => {
   useEffect(() => { stickerBlocksRef.current = stickerBlocks; }, [stickerBlocks]);
   useEffect(() => { shapeBlocksRef.current = shapeBlocks; }, [shapeBlocks]);
 
-  // Add sticker to canvas
+  // Add sticker to canvas at random position near center
   const addSticker = useCallback((emoji: string) => {
+    const offsetX = (Math.random() - 0.5) * 0.3;
+    const offsetY = (Math.random() - 0.5) * 0.3;
     const newSticker: StickerBlock = {
       id: `sticker-${Date.now()}`,
       emoji,
-      x: 0.5,
-      y: 0.5,
+      x: Math.max(0.1, Math.min(0.9, 0.5 + offsetX)),
+      y: Math.max(0.1, Math.min(0.9, 0.5 + offsetY)),
       size: 48,
     };
     setStickerBlocks((prev) => [...prev, newSticker]);
@@ -132,15 +135,17 @@ const Editor = () => {
     setStickerBlocks((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
-  // Add shape to canvas
+  // Add shape to canvas at random position
   const addShape = useCallback(() => {
+    const offsetX = (Math.random() - 0.5) * 0.4;
+    const offsetY = (Math.random() - 0.5) * 0.4;
     const newShape: ShapeBlock = {
       id: `shape-${Date.now()}`,
       type: shapeType,
-      x: 0.1,
-      y: 0.1,
-      width: 0.3,
-      height: shapeType === 'line' || shapeType === 'arrow' ? 0.2 : 0.2,
+      x: Math.max(0.05, Math.min(0.7, 0.3 + offsetX)),
+      y: Math.max(0.05, Math.min(0.7, 0.3 + offsetY)),
+      width: 0.25,
+      height: shapeType === 'line' || shapeType === 'arrow' ? 0.15 : 0.25,
       color: shapeColor,
       filled: shapeFilled,
       strokeWidth: shapeStroke,
@@ -151,6 +156,20 @@ const Editor = () => {
   // Remove shape from canvas
   const removeShape = useCallback((id: string) => {
     setShapeBlocks((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  // Move sticker on canvas
+  const moveSticker = useCallback((id: string, x: number, y: number) => {
+    setStickerBlocks((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, x, y } : s))
+    );
+  }, []);
+
+  // Move shape on canvas
+  const moveShape = useCallback((id: string, x: number, y: number) => {
+    setShapeBlocks((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, x, y } : s))
+    );
   }, []);
 
   // Initialize texts when template loads
@@ -400,6 +419,8 @@ const Editor = () => {
               customBackground={customBackground}
               stickerBlocks={stickerBlocks}
               shapeBlocks={shapeBlocks}
+              onMoveSticker={moveSticker}
+              onMoveShape={moveShape}
               canvasRef={canvasRef as React.RefObject<HTMLCanvasElement>}
             />
           </div>
@@ -421,7 +442,7 @@ const Editor = () => {
                   <Button
                     variant={activeTool === 'sticker' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setActiveTool('sticker')}
+                    onClick={() => setActiveTool(activeTool === 'sticker' ? 'text' : 'sticker')}
                     className="flex-1"
                   >
                     <Smile className="h-4 w-4 mr-1" />Стикер
@@ -506,7 +527,16 @@ const Editor = () => {
 
                 {/* Stickers picker - visible when sticker tool active */}
                 {activeTool === 'sticker' && (
-                  <div className="bg-card rounded-2xl border-2 border-border p-4 shadow-lg">
+                  <div className="bg-card rounded-2xl border-2 border-border p-4 shadow-lg relative">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTool('text')}
+                        className="text-2xl hover:bg-muted rounded-lg p-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
                     <StickerPicker onSelect={addSticker} />
                     {stickerBlocks.length > 0 && (
                       <div className="pt-3 mt-3 border-t border-border">
